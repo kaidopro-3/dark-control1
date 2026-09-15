@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dark Control — Device Telemetry</title>
+<style>
+  :root { --bg:#050505; --panel:#0a0a0a; --neon:#00ff88; --neon2:#ff0055; --text:#e0e0e0; --dim:#444; --green:#00ff88; --red:#ff0055; --yellow:#ffcc00; }
+  * { box-sizing:border-box; margin:0; }
+  body { background:var(--bg); color:var(--text); font-family:"Segoe UI",system-ui,sans-serif; min-height:100vh; }
+  header { display:flex; align-items:center; justify-content:space-between; padding:1rem 2rem;
+           border-bottom:1px solid #1a1a1a; background:var(--panel); }
+  h1 { font-size:1.1rem; letter-spacing:.15em; text-transform:uppercase;
+       background:linear-gradient(90deg,var(--neon),var(--neon2));
+       -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .logout { background:none; border:1px solid #333; color:var(--dim); padding:.5rem 1.2rem;
+            border-radius:8px; cursor:pointer; font-size:.8rem; letter-spacing:.05em; }
+  .logout:hover { border-color:var(--neon2); color:var(--text); }
+  main { max-width:1300px; margin:0 auto; padding:2rem; }
+  .grid { display:grid; grid-template-columns:320px 1fr; gap:1.5rem; }
+  @media (max-width:900px) { .grid { grid-template-columns:1fr; } }
+
+  /* Device List */
+  .sidebar { background:var(--panel); border:1px solid #1a1a1a; border-radius:14px; overflow:hidden; }
+  .sidebar h2 { font-size:.7rem; text-transform:uppercase; letter-spacing:.12em; color:var(--dim);
+                padding:1rem 1.2rem; border-bottom:1px solid #1a1a1a; }
+  .device { padding:1rem 1.2rem; border-bottom:1px solid #111; cursor:pointer;
+            transition:background .15s; display:flex; align-items:center; gap:.7rem; }
+  .device:hover, .device.active { background:#111; }
+  .device:last-child { border-bottom:none; }
+  .dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+  .dot.online { background:var(--green); box-shadow:0 0 10px var(--green); }
+  .dot.offline { background:var(--red); box-shadow:0 0 10px var(--red); }
+  .dev-name { font-size:.85rem; font-weight:600; }
+  .dev-meta { font-size:.7rem; color:var(--dim); margin-top:.15rem; }
+  .batt-bar { width:50px; height:4px; background:#222; border-radius:2px; margin-top:.4rem; overflow:hidden; }
+  .batt-bar > div { height:100%; border-radius:2px; }
+
+  /* Main Panel */
+  .content { background:var(--panel); border:1px solid #1a1a1a; border-radius:14px; overflow:hidden; }
+  .tabs { display:flex; border-bottom:1px solid #1a1a1a; overflow-x:auto; }
+  .tab { padding:.9rem 1.4rem; font-size:.75rem; text-transform:uppercase; letter-spacing:.08em;
+         color:var(--dim); cursor:pointer; border-bottom:2px solid transparent; white-space:nowrap;
+         transition:all .15s; background:none; border-top:none; border-left:none; border-right:none; }
+  .tab:hover { color:var(--text); }
+  .tab.active { color:var(--neon); border-bottom-color:var(--neon); }
+  .tab-body { padding:1.5rem; min-height:400px; }
+  .empty { color:var(--dim); text-align:center; padding:4rem; font-size:.9rem; }
+
+  /* Tables */
+  table { width:100%; border-collapse:collapse; font-size:.85rem; }
+  th, td { text-align:left; padding:.75rem 1rem; border-bottom:1px solid #1a1a1a; }
+  th { color:var(--dim); font-size:.65rem; letter-spacing:.1em; text-transform:uppercase; font-weight:600; }
+  tr:last-child td { border-bottom:none; }
+  .badge { display:inline-block; padding:.2rem .6rem; border-radius:4px; font-size:.7rem;
+           font-weight:600; text-transform:uppercase; letter-spacing:.05em; }
+  .badge.online { background:rgba(0,255,136,.1); color:var(--green); }
+  .badge.offline { background:rgba(255,0,85,.1); color:var(--red); }
+
+  #status-bar { color:var(--dim); font-size:.75rem; margin-bottom:1.2rem; display:flex; gap:1.5rem; }
+  .sync { color:var(--green); }
+</style>
+</head>
+<body>
+<header>
+  <h1>Dark Control</h1>
+  <button class="logout" id="out">Sign Out</button>
+</header>
+<main>
+  <div class="grid">
+    <div class="sidebar">
+      <h2>Active Devices</h2>
+      <div id="dev-list"></div>
+    </div>
+    <div class="content">
+      <div class="tabs">
+        <button class="tab active" data-tab="overview">Overview</button>
+        <button class="tab" data-tab="calls">Calls</button>
+        <button class="tab" data-tab="messages">Messages</button>
+        <button class="tab" data-tab="contacts">Contacts</button>
+        <button class="tab" data-tab="media">Media</button>
+        <button class="tab" data-tab="apps">Applications</button>
+      </div>
+      <div class="tab-body" id="tab-body">
+        <div id="status-bar"><span id="sel-device">No device selected</span><span class="sync" id="sync">● Live</span></div>
+        <div id="panel-content"></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+const tk = sessionStorage.getItem("tk");
+if (!tk) location.href = "/login.html";
+document.getElementById("out").onclick = () => { sessionStorage.clear(); location.href = "/login.html"; };
+
+const esc = (s) => String(s).replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+const battColor = b => b > 50 ? "var(--green)" : b > 20 ? "var(--yellow)" : "var(--red)";
+const ago = t => { const s = Math.max(0, (Date.now() - t) / 1000 | 0); return s < 60 ? s + "s ago" : (s/60|0) + "m " + (s%60) + "s ago"; };
+
+let devices = [];
+let selectedId = null;
+let currentTab = "overview";
+
+async function fetchDevices() {
+  try {
+    const res = await fetch("/api/devices", { headers: { Authorization: "Bearer " + tk } });
+    if (res.status === 401) { sessionStorage.clear(); location.href = "/login.html"; return; }
+    const data = await res.json();
+    devices = data.devices || [];
+    renderList();
+    if (selectedId) renderPanel();
+  } catch (e) { console.error(e); }
+}
+
+function renderList() {
+  const el = document.getElementById("dev-list");
+  if (!devices.length) { el.innerHTML = '<div class="empty">No devices connected</div>'; return; }
+  el.innerHTML = devices.map(d => `
+    <div class="device ${d.id === selectedId ? 'active' : ''}" data-id="${esc(d.id)}">
+      <div class="dot ${d.status}"></div>
+      <div>
+        <div class="dev-name">${esc(d.id)}</div>
+        <div class="dev-meta">${esc(d.model || "Unknown")} • ${esc(d.appVersion || "?")}</div>
+        <div class="batt-bar"><div style="width:${d.battery}%;background:${battColor(d.battery)}"></div></div>
+      </div>
+    </div>
+  `).join("");
+  el.querySelectorAll(".device").forEach(div => {
+    div.onclick = () => { selectedId = div.dataset.id; renderList(); renderPanel(); };
+  });
+}
+
+async function renderPanel() {
+  const dev = devices.find(d => d.id === selectedId);
+  document.getElementById("sel-device").textContent = dev ? `Device: ${esc(dev.id)}` : "No device selected";
+  const container = document.getElementById("panel-content");
+
+  if (!dev) { container.innerHTML = '<div class="empty">Select a device from the list</div>'; return; }
+
+  if (currentTab === "overview") {
+    container.innerHTML = `
+      <table>
+        <tr><th>Property</th><th>Value</th></tr>
+        <tr><td>Device ID</td><td>${esc(dev.id)}</td></tr>
+        <tr><td>Status</td><td><span class="badge ${dev.status}">${esc(dev.status)}</span></td></tr>
+        <tr><td>Model</td><td>${esc(dev.model || "—")}</td></tr>
+        <tr><td>OS Version</td><td>${esc(dev.osVersion || "—")}</td></tr>
+        <tr><td>App Version</td><td>${esc(dev.appVersion || "—")}</td></tr>
+        <tr><td>Battery</td><td><b style="color:${battColor(dev.battery)}">${dev.battery}%</b></td></tr>
+        <tr><td>Last Seen</td><td>${ago(dev.lastSeen)}</td></tr>
+      </table>`;
+    return;
+  }
+
+  // For diagnostic tabs, fetch from server
+  try {
+    const res = await fetch("/api/diagnostics/" + encodeURIComponent(selectedId), { headers: { Authorization: "Bearer " + tk } });
+    const data = await res.json();
+    const diag = data.diagnostics?.[currentTab];
+    
+    if (!diag || !diag.items?.length) {
+      container.innerHTML = `<div class="empty">No ${esc(currentTab)} data available for this device.<br><small>Ensure device is enrolled and permissions are granted.</small></div>`;
+      return;
+    }
+    
+    container.innerHTML = `
+      <table>
+        <tr><th>#</th><th>Data</th><th>Updated</th></tr>
+        ${diag.items.map((item, i) => `<tr><td>${i+1}</td><td>${esc(item)}</td><td>${ago(diag.updatedAt)}</td></tr>`).join("")}
+      </table>`;
+  } catch {
+    container.innerHTML = '<div class="empty">Failed to load diagnostic data</div>';
+  }
+}
+
+// Tabs
+document.querySelectorAll(".tab").forEach(tab => {
+  tab.onclick = () => {
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    tab.classList.add("active");
+    currentTab = tab.dataset.tab;
+    renderPanel();
+  };
+});
+
+setInterval(fetchDevices, 5000);
+fetchDevices();
+</script>
+</body>
+</html>

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dark Control — Authentication</title>
+<style>
+  :root { --bg:#050505; --panel:#0a0a0a; --neon:#00ff88; --neon2:#ff0055; --text:#e0e0e0; --dim:#555; }
+  * { box-sizing:border-box; margin:0; }
+  body { min-height:100vh; display:grid; place-items:center; background:var(--bg);
+         font-family:"Segoe UI",system-ui,sans-serif; color:var(--text);
+         background-image: radial-gradient(circle at 10% 20%, rgba(0,255,136,.05), transparent 40%),
+                          radial-gradient(circle at 90% 80%, rgba(255,0,85,.05), transparent 40%); }
+  .card { width:min(400px,92vw); background:var(--panel); border:1px solid #1a1a1a;
+          border-radius:16px; padding:2.5rem; box-shadow:0 0 60px rgba(0,255,136,.08); }
+  h1 { font-size:1.4rem; letter-spacing:.15em; text-transform:uppercase; margin-bottom:.3rem;
+       background:linear-gradient(90deg,var(--neon),var(--neon2));
+       -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .sub { color:var(--dim); font-size:.75rem; letter-spacing:.1em; margin-bottom:2rem; }
+  label { display:block; font-size:.7rem; color:var(--dim); letter-spacing:.1em;
+          margin:1.2rem 0 .4rem; text-transform:uppercase; }
+  input { width:100%; padding:.8rem 1rem; background:#0d0d0d; color:var(--text);
+          border:1px solid #222; border-radius:10px; outline:none; font-size:.95rem;
+          transition:border-color .2s, box-shadow .2s; }
+  input:focus { border-color:var(--neon); box-shadow:0 0 0 3px rgba(0,255,136,.1); }
+  button { width:100%; margin-top:1.8rem; padding:.85rem; border:none; border-radius:10px;
+           cursor:pointer; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
+           color:#000; background:linear-gradient(90deg,var(--neon),var(--neon2));
+           transition:filter .2s, transform .1s; }
+  button:hover { filter:brightness(1.2); }
+  button:active { transform:scale(.98); }
+  #err { color:var(--neon2); font-size:.85rem; margin-top:1rem; min-height:1.2em; text-align:center; }
+</style>
+</head>
+<body>
+  <form class="card" id="f" autocomplete="off">
+    <h1>Dark Control</h1>
+    <div class="sub">Enterprise Telemetry Console</div>
+    <label for="u">Username</label>
+    <input id="u" required maxlength="32" autocapitalize="off" placeholder="admin">
+    <label for="p">Password</label>
+    <input id="p" type="password" required maxlength="128" placeholder="••••••••">
+    <button type="submit">Authenticate</button>
+    <div id="err"></div>
+  </form>
+<script>
+document.getElementById("f").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const err = document.getElementById("err");
+  err.textContent = "";
+  const res = await fetch("/api/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      username: document.getElementById("u").value.trim(),
+      password: document.getElementById("p").value,
+    }),
+  });
+  if (!res.ok) { err.textContent = "Authentication failed."; return; }
+  const { token } = await res.json();
+  sessionStorage.setItem("tk", token);
+  location.href = "/panel.html";
+});
+</script>
+</body>
+</html>
