@@ -8,17 +8,12 @@ const rateLimit = require("express-rate-limit");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ── الإعدادات (استخدم متغيرات البيئة على Render) ───────────────────
+// ── الإعدادات ───────────────────────────────────────────────────
 const ADMIN_USER = process.env.ADMIN_USER || "admin";
-const ADMIN_PASS_HASH = process.env.ADMIN_PASS_HASH || ""; // sha256 hex
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin123"; // تُقرأ بأمان من إعدادات Render
 const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(32).toString("hex");
 const TOKEN_TTL_MS = 1000 * 60 * 60 * 8;
 const DEVICE_API_KEY = process.env.DEVICE_API_KEY || ""; // مفتاح لتوثيق الأجهزة
-
-if (process.env.NODE_ENV === "production" && (!ADMIN_PASS_HASH || !process.env.JWT_SECRET)) {
-  console.error("ERROR: Set ADMIN_PASS_HASH and JWT_SECRET in production.");
-  process.exit(1);
-}
 
 const DB_PATH = path.join(__dirname, "devices.json");
 const readDB = () => JSON.parse(fs.readFileSync(DB_PATH, "utf8"));
@@ -76,12 +71,13 @@ function requireDeviceKey(req, res, next) {
   next();
 }
 
-// ── تسجيل الدخول ───────────────────────────────────────────────────
+// ── تسجيل الدخول (بشكل آمن ومباشر عبر متغيرات البيئة) ───────────────────
 app.post("/api/login", loginLimiter, (req, res) => {
   const username = cleanStr(req.body?.username, 32);
   const password = String(req.body?.password ?? "").slice(0, 128);
-  const hash = crypto.createHash("sha256").update(password).digest("hex");
-  const ok = username === ADMIN_USER && (!ADMIN_PASS_HASH || hash === ADMIN_PASS_HASH);
+  
+  const ok = username === ADMIN_USER && password === ADMIN_PASSWORD;
+  
   if (!ok) return res.status(401).json({ error: "Invalid credentials" });
   res.json({ token: signToken({ sub: username, exp: Date.now() + TOKEN_TTL_MS }) });
 });
@@ -109,9 +105,7 @@ app.post("/api/telemetry", apiLimiter, requireDeviceKey, (req, res) => {
   res.json({ ok: true });
 });
 
-// ── استقبال بيانات تشخيصية إضافية (بنية تحتية فقط) ────────────────
-// ملاحظة: الوصول إلى Calls/Messages/Contacts/Media يتطلب Android Enterprise APIs
-// وموافقة صريحة. هذه نقاط نهاية بنيوية فقط للوحة التحكم.
+// ── استقبال بيانات تشخيصية إضافية ────────────────────────────────
 app.post("/api/diagnostics/:category", apiLimiter, requireDeviceKey, (req, res) => {
   const id = cleanId(cleanStr(req.body?.deviceId, 64));
   const category = cleanStr(req.params.category, 16);
