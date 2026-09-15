@@ -1,29 +1,15 @@
-<style>
 /* =========================================================
-   SPECTER-7 // DARK CONTROL PANEL (UPDATED WITH GLOW)
+   GHOST SPY // DARK CONTROL PANEL (CSS ONLY)
    ========================================================= */
-
 :root {
     --bg: #030506;
-    --bg2: #06090b;
-
     --panel: #080d0f;
-    --panel2: #0b1214;
-
-    --border: rgba(0,255,136,.15);
-
     --green: #00ff88;
     --green-soft: rgba(0,255,136,.12);
-
     --blue: #00aaff;
-    --blue-soft: rgba(0,170,255,.12);
-
     --red: #ff174f;
-    --red-soft: rgba(255,23,79,.12);
-
     --text: #e7f5f0;
     --muted: #71847f;
-    --muted2: #465650;
 }
 
 * {
@@ -41,7 +27,7 @@ html, body {
     font-family: "Segoe UI", Tahoma, Arial, sans-serif;
 }
 
-/* خلفية الجريد المتحركة بأمان تام */
+/* خلفية الشبكة الخافتة */
 body::before {
     content: "";
     position: fixed;
@@ -54,43 +40,54 @@ body::before {
     z-index: -2;
 }
 
-/* الهيدر الثابت */
+/* الهيدر العلوي */
 header {
-    position: sticky;
-    top: 0;
-    height: 68px;
+    width: 100%;
+    padding: 15px 20px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 28px;
     background: rgba(5,8,10,.94);
     border-bottom: 1px solid rgba(0,255,136,.2);
     backdrop-filter: blur(15px);
+    position: sticky;
+    top: 0;
     z-index: 50;
-    box-shadow: 0 10px 30px rgba(0,0,0,.5);
 }
 
-h1 {
+.logo-box {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 14px;
+    background: var(--panel);
+    border: 1px solid rgba(0,255,136,0.3);
+    border-radius: 8px;
+    box-shadow: 0 0 15px rgba(0,255,136,0.1);
+    animation: boxNeonPulse 4s ease-in-out infinite;
+}
+
+.logo-box span {
     font-family: "Courier New", monospace;
-    font-size: 17px;
+    font-size: 16px;
     font-weight: 800;
-    letter-spacing: .10em;
     color: var(--green);
+    letter-spacing: .1em;
     text-shadow: 0 0 10px rgba(0,255,136,.5);
 }
 
-.header-actions {
+.top-actions {
     display: flex;
-    align-items: center;
-    gap: 9px;
+    gap: 10px;
 }
 
-.btn-danger, .logout {
-    height: 36px;
+.btn {
+    height: 35px;
     padding: 0 15px;
     border-radius: 6px;
     cursor: pointer;
     font-size: 12px;
+    font-family: "Courier New", monospace;
     transition: .25s ease;
 }
 
@@ -104,46 +101,70 @@ h1 {
     box-shadow: 0 0 15px rgba(255,23,79,.3);
 }
 
-.logout {
+.btn-logout {
     background: rgba(255,255,255,.02);
     border: 1px solid rgba(255,255,255,.1);
     color: var(--muted);
 }
-.logout:hover {
+.btn-logout:hover {
     color: var(--blue);
     border-color: rgba(0,170,255,.6);
     box-shadow: 0 0 15px rgba(0,170,255,.2);
 }
 
-/* الحاوية الرئيسية بدون أي إزاحة */
+/* المحتوى الرئيسي */
 main {
     width: 100%;
-    max-width: 100%;
-    margin: 0;
     padding: 20px;
-    overflow-x: hidden;
 }
 
-.grid-layout {
-    display: grid;
-    grid-template-columns: 270px 285px minmax(0,1fr);
-    gap: 16px;
-    align-items: start;
-    width: 100%;
-}
-
-/* =========================================================
-   تأثير الإضاءة المتحركة المستمرة لجميع المربعات (Cards)
-   ========================================================= */
-.box-card, .content-viewer {
-    position: relative;
+/* شريط اختيار الجهاز والحالة */
+.control-bar {
     background: var(--panel);
-    border-radius: 10px;
-    overflow: hidden;
-    /* إطار متحرك النيون لكل المربعات */
     border: 1px solid rgba(0, 255, 136, 0.3);
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 20px;
     box-shadow: 0 0 15px rgba(0, 255, 136, 0.08);
     animation: boxNeonPulse 4s ease-in-out infinite;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    align-items: center;
+    justify-content: space-between;
+}
+
+select, .status-info {
+    background: #06090b;
+    border: 1px solid rgba(255,255,255,.1);
+    color: var(--text);
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    outline: none;
+}
+
+/* توزيع الشبكة */
+.grid-layout {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 20px;
+}
+
+@media (max-width: 900px) {
+    .grid-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* المربعات ذات الإضاءة المتحركة المستمرة */
+.neon-card {
+    background: var(--panel);
+    border-radius: 10px;
+    border: 1px solid rgba(0, 255, 136, 0.35);
+    box-shadow: 0 0 15px rgba(0, 255, 136, 0.08);
+    animation: boxNeonPulse 4s ease-in-out infinite;
+    overflow: hidden;
 }
 
 @keyframes boxNeonPulse {
@@ -152,238 +173,56 @@ main {
         box-shadow: 0 0 10px rgba(0, 255, 136, 0.08);
     }
     50% {
-        border-color: rgba(0, 170, 255, 0.5);
-        box-shadow: 0 0 22px rgba(0, 170, 255, 0.2);
+        border-color: rgba(0, 170, 255, 0.6);
+        box-shadow: 0 0 25px rgba(0, 170, 255, 0.25);
     }
 }
 
-.box-card:hover, .content-viewer:hover {
-    border-color: var(--green);
-    box-shadow: 0 0 25px rgba(0, 255, 136, 0.3);
-}
-
-/* عناوين المربعات */
-.box-title {
-    height: 48px;
-    display: flex;
-    align-items: center;
-    padding: 0 16px;
+.card-header {
+    padding: 14px 16px;
     background: linear-gradient(90deg, rgba(0,255,136,.06), transparent);
     border-bottom: 1px solid rgba(255,255,255,.07);
     color: var(--green);
     font-family: "Courier New", monospace;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: .10em;
-}
-
-#dev-list {
-    max-height: calc(100vh - 160px);
-    overflow-y: auto;
-}
-
-.device-item {
-    position: relative;
-    min-height: 68px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 10px 15px;
-    border-bottom: 1px solid rgba(255,255,255,.045);
-    cursor: pointer;
-    transition: background .25s ease;
-}
-
-.device-item:hover {
-    background: rgba(0,255,136,.04);
-}
-
-.device-item.active {
-    background: linear-gradient(90deg, rgba(0,255,136,.03), rgba(0,255,136,.1));
-    box-shadow: inset 0 0 20px rgba(0,255,136,.05);
-}
-
-.dot {
-    width: 9px;
-    height: 9px;
-    border-radius: 50%;
-    flex-shrink: 0;
-}
-.dot.online {
-    background: var(--green);
-    box-shadow: 0 0 8px var(--green);
-}
-.dot.offline {
-    background: var(--red);
-    box-shadow: 0 0 8px var(--red);
-}
-
-.dev-name {
-    color: var(--text);
-    font-family: "Courier New", monospace;
     font-size: 12px;
     font-weight: 700;
-    margin-bottom: 4px;
-}
-.dev-meta {
-    color: var(--muted);
-    font-size: 10px;
 }
 
-/* القائمة الفرعية */
-.sub-menu-item {
-    position: relative;
-    min-height: 48px;
+.menu-list {
     display: flex;
-    align-items: center;
-    padding: 0 15px;
+    flex-direction: column;
+}
+
+.menu-item {
+    padding: 14px 16px;
     border-bottom: 1px solid rgba(255,255,255,.045);
     cursor: pointer;
     color: #9aa9a5;
-    font-size: 12px;
+    font-size: 13px;
     transition: all .25s ease;
-}
-
-.sub-menu-item:hover {
-    color: var(--blue);
-    background: rgba(0,170,255,.04);
-}
-
-.sub-menu-item.active {
-    color: var(--blue);
-    background: linear-gradient(90deg, rgba(0,170,255,.04), rgba(0,170,255,.12));
-    font-weight: 700;
-}
-
-/* شاشة المحتوى */
-.content-viewer {
-    min-height: calc(100vh - 120px);
-    display: flex;
-    flex-direction: column;
-}
-
-.content-header {
-    min-height: 55px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 18px;
-    background: linear-gradient(90deg, rgba(0,255,136,.05), rgba(0,170,255,.03), transparent);
-    border-bottom: 1px solid rgba(255,255,255,.07);
-    color: var(--green);
-    font-family: "Courier New", monospace;
-    font-size: 11px;
 }
 
-.content-body {
-    flex: 1;
+.menu-item:hover {
+    color: var(--blue);
+    background: rgba(0,170,255,.04);
+    padding-right: 20px;
+}
+
+.menu-item.active {
+    color: var(--blue);
+    background: linear-gradient(90deg, rgba(0,170,255,.04), rgba(0,170,255,.12));
+    border-right: 3px solid var(--blue);
+    font-weight: 700;
+}
+
+.viewer-body {
     padding: 20px;
-    overflow-y: auto;
-    max-height: calc(100vh - 175px);
+    min-height: 400px;
 }
 
-/* أشرطة التمرير الأنيقة */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: #050708; }
 ::-webkit-scrollbar-thumb { background: rgba(0,255,136,.3); border-radius: 10px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(0,255,136,.6); }
-
-/* الجداول والعناصر الداخلية */
-table {
-    width: 100%;
-    border-collapse: collapse;
-    border: 1px solid rgba(255,255,255,.06);
-    border-radius: 8px;
-    font-size: 12px;
-    overflow: hidden;
-}
-
-th, td {
-    text-align: right;
-    padding: 12px 14px;
-    border-bottom: 1px solid rgba(255,255,255,.05);
-}
-
-th {
-    background: rgba(0,255,136,.05);
-    color: var(--green);
-    font-family: "Courier New", monospace;
-    font-size: 10px;
-}
-
-td { color: #b9c8c3; }
-
-tbody tr:hover { background: rgba(0,255,136,.02); }
-
-.empty {
-    min-height: 250px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    gap: 10px;
-    color: var(--muted);
-    text-align: center;
-    padding: 20px;
-    font-size: 12px;
-}
-
-.badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 4px 9px;
-    border-radius: 4px;
-    font-family: "Courier New", monospace;
-    font-size: 9px;
-    font-weight: 700;
-}
-.badge.online { background: var(--green-soft); color: var(--green); border: 1px solid rgba(0,255,136,.3); }
-.badge.offline { background: var(--red-soft); color: var(--red); border: 1px solid rgba(255,23,79,.3); }
-
-.media-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
-    gap: 12px;
-}
-
-.media-box {
-    background: #060a0c;
-    border: 1px solid rgba(255,255,255,.08);
-    border-radius: 8px;
-    padding: 8px;
-    text-align: center;
-    transition: .3s ease;
-}
-.media-box:hover {
-    border-color: var(--green);
-    box-shadow: 0 0 15px rgba(0,255,136,.2);
-}
-.media-box img {
-    width: 100%;
-    height: 115px;
-    object-fit: cover;
-    border-radius: 5px;
-    margin-bottom: 7px;
-}
-
-.download-btn {
-    display: inline-block;
-    padding: 5px 10px;
-    border: 1px solid rgba(0,255,136,.3);
-    border-radius: 4px;
-    background: rgba(0,255,136,.05);
-    color: var(--green);
-    text-decoration: none;
-    font-size: 9px;
-    font-family: "Courier New", monospace;
-}
-.download-btn:hover {
-    background: var(--green);
-    color: #00150b;
-}
-
-@media (max-width: 900px) {
-    .grid-layout { grid-template-columns: 1fr; }
-}
-</style>
