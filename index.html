@@ -151,20 +151,36 @@ async function loadDevices() {
         const res = await fetch("/api/devices");
         const data = await res.json();
         const select = document.getElementById("deviceSelect");
+        
+        // الاحتفاظ بالجهاز المحدد حالياً إن وجد
+        const previousSelected = currentDevice;
         select.innerHTML = '<option value="">اختر الجهاز للتحكم...</option>';
-        if (data.devices) {
+        
+        if (data.devices && data.devices.length > 0) {
             data.devices.forEach(d => {
                 const opt = document.createElement("option");
                 opt.value = d.id;
-                opt.textContent = `${d.model || d.id} (${d.status})`;
+                
+                // تحديد الحالة (متصل / غير متصل) مع اللمبة المناسبة و نسبة البطارية
+                const isConnected = d.status === 'connected';
+                const indicator = isConnected ? '🟢 متصل' : '🔴 غير متصل';
+                const batteryText = d.battery !== undefined ? ` | 🔋 ${d.battery}%` : '';
+                
+                opt.textContent = `${d.model || d.id}${batteryText} (${indicator})`;
                 select.appendChild(opt);
             });
-            if (data.devices.length > 0 && !currentDevice) {
+            
+            // إعادة تحديد الجهاز إذا كان موجوداً
+            if (previousSelected) {
+                select.value = previousSelected;
+            } else if (data.devices.length > 0) {
                 select.value = data.devices[0].id;
-                selectDevice(data.devices[0].id);
+                currentDevice = data.devices[0].id;
             }
         }
-    } catch(e) { console.error(e); }
+    } catch (e) {
+        console.error("Error loading devices:", e);
+    }
 }
 
 function selectDevice(id) {
@@ -233,7 +249,8 @@ function switchTab(tabName) {
 }
 
 loadDevices();
-setInterval(loadDevices, 15000);
+// تحديث تلقائي لقائمة الأجهزة والحالة كل 5 ثوانٍ
+setInterval(loadDevices, 5000);
 </script>
 </body>
 </html>
