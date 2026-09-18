@@ -1,7 +1,5 @@
-// التحقق من تسجيل الدخول
-if (sessionStorage.getItem('logged_in') !== 'true') {
-    window.location.href = 'login.html';
-}
+// تجاوز صفحة تسجيل الدخول والدخول للوحة مباشرة
+sessionStorage.setItem('logged_in', 'true');
 
 let currentDevice = null;
 let updateInterval = null;
@@ -18,7 +16,7 @@ let soundPlayedForDevice = false;
 // تسجيل الخروج
 function logout() { 
     sessionStorage.removeItem('logged_in'); 
-    window.location.href = 'login.html'; 
+    window.location.href = 'index.html'; 
 }
 
 // تشغيل صوت تنبيه
