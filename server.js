@@ -1,7 +1,16 @@
 const express = require('express');
+const path = require('path');
 const app = express();
 
 app.use(express.json({ limit: '50mb' }));
+
+// السماح بقراءة ملفات الواجهة والـ static files من نفس المجلد
+app.use(express.static(__dirname));
+
+// مسار الصفحة الرئيسية لعرض لوحة التحكم تلقائياً
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index_3.html'));
+});
 
 // تخزين مؤقت لحالة الأجهزة المتصلة
 const deviceSessions = {};
