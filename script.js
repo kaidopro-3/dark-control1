@@ -52,11 +52,12 @@ function showNotification(title, message, icon) {
     setTimeout(() => { if (div.parentElement) div.remove(); }, 5000);
 }
 
-// تحميل الأجهزة المتصلة
+// تحميل الأجهزة المتصلة من السيرفر مباشرة
 async function loadDevices() {
     try {
-        const response = await fetch('/devices.json');
-        const devices = await response.json();
+        const response = await fetch('/api/devices');
+        const data = await response.json();
+        const devices = data.devices || [];
         
         const select = document.getElementById('deviceSelect');
         const currentValue = currentDevice;
@@ -65,7 +66,7 @@ async function loadDevices() {
         devices.forEach(device => {
             const option = document.createElement('option');
             option.value = device.id;
-            option.textContent = device.name || device.id;
+            option.textContent = device.model || device.id;
             select.appendChild(option);
         });
         
@@ -119,23 +120,13 @@ function selectDevice(deviceId) {
 async function updateLiveData() {
     if (!currentDevice) return;
     try {
-        const response = await fetch(`/live.php?device=${encodeURIComponent(currentDevice)}`);
+        const response = await fetch(`/api/diagnostics/${encodeURIComponent(currentDevice)}`);
         const data = await response.json();
         
         const statusEl = document.getElementById('networkStatus');
         if (statusEl) {
-            if (data.online) { 
-                statusEl.textContent = data.network || 'متصل'; 
-                statusEl.className = 'value online'; 
-            } else { 
-                statusEl.textContent = 'غير متصل'; 
-                statusEl.className = 'value offline'; 
-            }
-        }
-        
-        if (data.battery !== null && data.battery !== undefined) {
-            const batEl = document.getElementById('batteryStatus');
-            if (batEl) batEl.textContent = data.battery + '%';
+            statusEl.textContent = 'متصل'; 
+            statusEl.className = 'value online'; 
         }
     } catch (e) {}
 }
