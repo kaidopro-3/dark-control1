@@ -1,6 +1,16 @@
 const express = require('express');
+const path = require('path');
 const app = express();
+
 app.use(express.json());
+
+// قراءة الملفات الثابتة (مثل index.html والصور والملفات بجانبه)
+app.use(express.static(__dirname));
+
+// توجيه الصفحة الرئيسية مباشرة إلى index.html
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
 
 // تخزين مؤقت للأجهزة المتصلة
 let devices = {};
